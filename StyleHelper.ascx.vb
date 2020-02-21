@@ -3255,43 +3255,64 @@ Namespace FortyFingers.Dnn.SkinObjects
             'Allow the use of all kinds of DNN attributes to be used in templates
             'Will parse the passed string
 
-            'Replace PortalId
-            sOriginal = ReplaceToken(sOriginal, "[Portal:Id]", PortalSettings.PortalId.ToString, TextType.Text)
-            sOriginal = ReplaceToken(sOriginal, "[PortalId]", PortalSettings.PortalId.ToString, TextType.Text) ' Legacy
+            'Portal
+            Dim strPortal As String = "[Portal"
 
-            sOriginal = ReplaceToken(sOriginal, "[Portal:Alias]", PortalSettings.PortalAlias.HTTPAlias, Type)
-            sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Root]", GetParentAlias(), Type)
-            sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Protocol]", GetAliasProtocol(), Type)
+            'Is there a portal token
+            If sOriginal.Contains(strPortal) Then
+
+                'Replace PortalId
+                sOriginal = ReplaceToken(sOriginal, "[Portal:Id]", PortalSettings.PortalId.ToString, TextType.Text)
+                sOriginal = ReplaceToken(sOriginal, "[PortalId]", PortalSettings.PortalId.ToString, TextType.Text) ' Legacy
+
+                sOriginal = ReplaceToken(sOriginal, "[Portal:Alias]", PortalSettings.PortalAlias.HTTPAlias, Type)
+                sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Root]", GetParentAlias(), Type)
+                sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Protocol]", GetAliasProtocol(), Type)
+
+                sOriginal = ReplaceToken(sOriginal, "[Portal:Name]", PortalSettings.PortalName, Type)
+
+                sOriginal = ReplaceSettingsToken(sOriginal, SettingsType.Portal, Type)
+
+            End If
+
+            'Pages / Tabs
+
+            'Portal
+            Dim strPage As String = "[Page"
+
+            'Is there a portal token
+            If sOriginal.Contains(strPage) Then
+
+                'Replace Page data
+                Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = GetTabData()
+
+                sOriginal = ReplaceToken(sOriginal, "[Page:Name]", oTab.TabName, Type)
+                sOriginal = ReplaceToken(sOriginal, "[PageName]", oTab.TabName, Type) ' Legacy
+
+                sOriginal = ReplaceToken(sOriginal, "[Page:Level]", oTab.Level.ToString, TextType.Text)
+                sOriginal = ReplaceToken(sOriginal, "[PageLevel]", oTab.Level.ToString, TextType.Text) ' Legacy
+
+                sOriginal = ReplaceToken(sOriginal, "[Page:Title]", oTab.Title, Type)
+
+                sOriginal = ReplaceToken(sOriginal, "[Page:Description]", oTab.Description, Type)
+                sOriginal = ReplaceToken(sOriginal, "[Page:Url]", GetFullUrl, Type)
+                sOriginal = ReplaceToken(sOriginal, "[Page:RelativeUrl]", System.Web.HttpContext.Current.Request.RawUrl, Type)
+                sOriginal = ReplaceToken(sOriginal, "[Page:Id]", oTab.TabID.ToString, TextType.Text)
+
+                sOriginal = ReplaceToken(sOriginal, "[Page:Skin]", oTab.SkinSrc, Type)
+                sOriginal = ReplaceToken(sOriginal, "[Page:Container]", oTab.ContainerSrc, Type)
+
+                sOriginal = ReplaceToken(sOriginal, "[Page:IconFile]", oTab.IconFile, Type)
+                sOriginal = ReplaceToken(sOriginal, "[Page:IconFileLarge]", oTab.IconFileLarge, Type)
 
 
-            sOriginal = ReplaceToken(sOriginal, "[Portal:Name]", PortalSettings.PortalName, Type)
+                sOriginal = ReplaceSettingsToken(sOriginal, SettingsType.Tab, Type)
 
 
-            'Replace Page data
-            Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = GetTabData()
-
-            sOriginal = ReplaceToken(sOriginal, "[Page:Name]", oTab.TabName, Type)
-            sOriginal = ReplaceToken(sOriginal, "[PageName]", oTab.TabName, Type) ' Legacy
-
-            sOriginal = ReplaceToken(sOriginal, "[Page:Level]", oTab.Level.ToString, TextType.Text)
-            sOriginal = ReplaceToken(sOriginal, "[PageLevel]", oTab.Level.ToString, TextType.Text) ' Legacy
-
-            sOriginal = ReplaceToken(sOriginal, "[Page:Title]", oTab.Title, Type)
-
-            sOriginal = ReplaceToken(sOriginal, "[Page:Description]", oTab.Description, Type)
-            sOriginal = ReplaceToken(sOriginal, "[Page:Url]", GetFullUrl, Type)
-            sOriginal = ReplaceToken(sOriginal, "[Page:RelativeUrl]", System.Web.HttpContext.Current.Request.RawUrl, Type)
-            sOriginal = ReplaceToken(sOriginal, "[Page:Id]", oTab.TabID.ToString, TextType.Text)
-
-            sOriginal = ReplaceToken(sOriginal, "[Page:Skin]", oTab.SkinSrc, Type)
-            sOriginal = ReplaceToken(sOriginal, "[Page:Container]", oTab.ContainerSrc, Type)
-
-            sOriginal = ReplaceToken(sOriginal, "[Page:IconFile]", oTab.IconFile, Type)
-            sOriginal = ReplaceToken(sOriginal, "[Page:IconFileLarge]", oTab.IconFileLarge, Type)
+            End If
 
 
             sOriginal = ReplaceToken(sOriginal, "[Date]", Now().ToString("yyyyMMdd"), TextType.Text)
-
 
             'As these are calculated Values, first check if there is a match for the Token
 
@@ -3341,7 +3362,6 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
 
-
             'Replace QS Parameters
 
             'Get the pattern [xxx]
@@ -3373,6 +3393,63 @@ Namespace FortyFingers.Dnn.SkinObjects
             Return (sOriginal)
 
         End Function
+
+
+
+        Private Function ReplaceSettingsToken(Original As String, SetType As SettingsType, TxtType As TextType) As String
+
+            Dim strType As String = ""
+            Dim TabId As Integer = -1
+
+            Select Case SetType
+
+                Case SettingsType.Application
+                    strType = "Application"
+                Case SettingsType.Portal
+                    strType = "Portal"
+                Case SettingsType.Tab
+                    strType = "Page"
+                    TabId = PortalSettings.ActiveTab.TabID
+
+            End Select
+
+
+
+
+            'Page settings, not a regex test for performance
+
+            Dim strBase As String = String.Format("[{0}:Settings", strType)
+
+            'Is there a setting in the token?
+            If Original.Contains(strBase) Then
+
+
+                ' Process Settings token
+
+                'Create regex
+                Dim strSettingRx As String = String.Format("\{0}\.(.*?)]", strBase)
+
+
+                Dim rxSettings As Regex = New Regex(strSettingRx, RegexOptions.IgnoreCase Or RegexOptions.CultureInvariant)
+
+                'loop over matches
+
+                For Each mtch As Match In rxSettings.Matches(Original)
+
+                    Dim strName As String = mtch.Groups(1).Value
+                    Dim strVal As String = GetSetting(SetType, TabId, strName)
+                    Original = ReplaceToken(Original, mtch.Groups(0).Value, strVal, TxtType)
+
+                Next
+
+
+
+            End If
+
+            Return Original
+
+        End Function
+
 
 
         Private Function GetParentAlias() As String
@@ -3424,6 +3501,86 @@ Namespace FortyFingers.Dnn.SkinObjects
             Return Regex.IsMatch(Original, Regex.Escape(Token), RegexOptions.IgnoreCase)
 
         End Function
+
+#End Region
+
+
+#Region "DNN Settings"
+
+        Enum SettingsType
+
+            Application
+            Portal
+            Tab
+
+        End Enum
+
+
+
+
+        Private Function GetSetting(Mode As SettingsType, TabId As Integer, PropertyName As String) As String
+
+
+
+            Select Case Mode
+
+                Case SettingsType.Application
+
+                    'to be added later
+
+                Case SettingsType.Portal
+
+                    Return PortalController.GetPortalSetting(PropertyName, PortalSettings.PortalId, "")
+
+
+                Case SettingsType.Tab
+
+                        Dim oTabC As New TabController
+                        Dim htTabSettings As Hashtable = oTabC.GetTabSettings(TabId)
+                        Return htTabSettings(PropertyName).ToString
+
+
+
+                End Select
+
+
+            Return ""
+
+        End Function
+
+
+        Private Sub SaveSetting(Mode As SettingsType, PropertyName As String, Value As String)
+
+            If ModuleControl Is Nothing Then
+
+                Select Case Mode
+
+                    Case SettingsType.Application
+
+                        'to be added later
+
+                    Case SettingsType.Portal
+
+                        PortalController.UpdatePortalSetting(PortalSettings.PortalId, PropertyName, Value)
+
+
+                    Case SettingsType.Tab
+
+                        Dim oTabC As New TabController
+                        oTabC.UpdateTabSetting(PortalSettings.ActiveTab.TabID, PropertyName, Value)
+
+
+                End Select
+
+
+
+
+            End If
+
+
+        End Sub
+
+
 
 #End Region
 
