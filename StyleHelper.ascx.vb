@@ -54,6 +54,21 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         End Enum
 
+        Enum VersionIs
+
+            Same = 0
+            Bigger = 1
+            Smaller = -1
+
+        End Enum
+
+
+        Dim strUserModeNone As String = "None"
+
+        Dim caCondition() As Char = "<>=".ToCharArray()
+
+
+
 #End Region
 
 
@@ -550,6 +565,7 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Property
 
 
+
         Private _sCssClassCase As String = "none"
         ''' <summary>
         ''' 
@@ -666,11 +682,30 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 #Region "Public Properties Filters"
 
+
+        Private _strIfDnnVersion As String = String.Empty
+
+        ''' <summary>
+        ''' Check the DNN version
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property IfDnnVersion() As String
+            Get
+                Return _strIfDnnVersion
+            End Get
+            Set(ByVal value As String)
+                _strIfDnnVersion = value
+            End Set
+        End Property
+
+
         Private _sIfBrowser As String = String.Empty
         ''' <summary>
         ''' Comma seperated list of browsers / versions
         ''' </summary>
-        ''' <value></value>
+        ''' <value>
+        ''' IE, IE10, IE>10, IE=>11
+        ''' </value>
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfBrowser() As String
@@ -681,6 +716,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return _sIfBrowser
             End Get
         End Property
+
 
 
 
@@ -1150,7 +1186,9 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <remarks></remarks>
         Public ReadOnly Property ShowBrowserVersion(Optional ByVal ShowMinor As Boolean = True) As String
             Get
-                Return GetBrowserVersion(ShowMinor).ToString
+
+                Return GetBrowserVersion().Major.ToString
+
 
             End Get
         End Property
@@ -1163,7 +1201,7 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <remarks></remarks>
         Public ReadOnly Property ShowBrowser() As String
             Get
-                Return GetBrowser()
+                Return GetBrowserName()
             End Get
         End Property
 
@@ -1326,7 +1364,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             ProcessDoctype()
 
             'Add the HTML attributes, only needed for DNN 6+
-            If CheckDnnVersion("6.0") >= 0 Then
+            If CheckDnnVersion("+6") Then
                 Dim oAttributes As Literal = CType(Me.Page.FindControl("attributeList"), Literal)
                 If Not oAttributes Is Nothing Then
                     oAttributes.Text = HtmlAttributeList()
@@ -1365,20 +1403,21 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             If DotNetNuke.Security.Permissions.TabPermissionController.CanAddContentToPage Or DotNetNuke.Security.Permissions.TabPermissionController.CanManagePage Then
                 Select Case PortalSettings.UserMode
+
                     Case DotNetNuke.Entities.Portals.PortalSettings.Mode.View
 
-                        Return "View"
+                        Return DotNetNuke.Entities.Portals.PortalSettings.Mode.View.ToString
 
                     Case DotNetNuke.Entities.Portals.PortalSettings.Mode.Edit
-                        Return "Edit"
+                        Return DotNetNuke.Entities.Portals.PortalSettings.Mode.Edit.ToString
 
                     Case DotNetNuke.Entities.Portals.PortalSettings.Mode.Layout
-                        Return "Layout"
+                        Return DotNetNuke.Entities.Portals.PortalSettings.Mode.Layout.ToString
 
                 End Select
             End If
 
-            Return ("None")
+            Return (strUserModeNone)
 
         End Function
 
@@ -2148,6 +2187,7 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Function CheckConditions() As Boolean
 
             Return CheckBrowsers(IfBrowser) AndAlso _
+            CheckDnnVersion(IfDnnVersion) AndAlso _
             CheckUser(IfUserName) AndAlso _
             CheckUserMode(IfUserMode) AndAlso _
             CheckURLs(IfURL) AndAlso _
@@ -2348,6 +2388,47 @@ Namespace FortyFingers.Dnn.SkinObjects
 #Region "Condition Functions"
 
 
+        Protected Function CheckDnnVersion(condition As String) As Boolean
+
+            If condition = String.Empty Then
+                Return True
+            Else
+
+
+                Return CheckVersion(condition, DotNetNukeContext.Current.Application.Version)
+
+            End If
+
+
+        End Function
+
+
+        Protected Function CurrentDnnVersion(Digits As Integer) As String
+
+            Dim oVersion As Version = DotNetNukeContext.Current.Application.Version
+
+            Dim strFormat As String = "{0:00}"
+
+            Dim sOut As String = String.Format(strFormat, oVersion.Major)
+
+            If Digits >= 2 Then
+
+                sOut &= String.Format(strFormat, oVersion.Minor)
+
+            End If
+
+            If Digits >= 3 Then
+
+                sOut &= String.Format(strFormat, oVersion.MinorRevision)
+
+            End If
+
+
+            Return (sOut)
+
+
+        End Function
+
         Protected Function CheckBrowsers(ByVal sBrowsers As String) As Boolean
             'Check if the current browser is part of the browser string
 
@@ -2367,88 +2448,243 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Function
 
 
+        ''' <summary>
+        ''' Check if this is the passed browser and if it's the passed version number
+        ''' </summary>
+        ''' <param name="sCheck"></param>
+        ''' <returns></returns>
 
-        Protected Function CheckBrowser(ByVal sIn As String) As Boolean
+        Protected Function CheckBrowser(ByVal sCheck As String) As Boolean
 
-            'Get all the current browsers data
-            Dim sCurBrowser As String = GetBrowser()
-            Dim siCurBrowser As Single = 0
+            Dim bReturn As Boolean = False
 
-            Dim bInclude As Boolean
+            sCheck = sCheck.ToLower
 
-            sIn = sIn.ToLower
 
-            'Check for Negation (!)
-            bInclude = Not CheckInvert(sIn)
+            'Get all the current browsers name and version 
+            Dim sBrowserName As String = GetBrowserName()
+            Dim oBrowserVersion As Version = GetBrowserVersion()
 
-            Dim bCheck As Boolean = False
+            'Check if the result should be "inverted" i.e check starts with a !
+            Dim bInvert As Boolean = False
+
+
+            'Check for Negation (!, this will be removed from sCheck)
+            bInvert = Not ParseInvert(sCheck)
+
+
             'Split Browser name and Version
-            Dim sBrowser() As String = Regex.Split(sIn, "[<>=]")
+            'location of the split character
+            Dim iSplit As Integer = sCheck.IndexOfAny(caCondition)
 
-            If (sBrowser(0).Trim = sCurBrowser) Then
-                Select Case sBrowser.Length
-                    Case 1
-                        'If there is no version number
-                        bCheck = True
-                    Case 2
-                        'If there is a version number
-                        Dim siVersion As Double
-                        siVersion = Val(sBrowser(1))
-                        'Check if no minor version was passed
-                        If sBrowser(1).IndexOf(".") = -1 Then
-                            siCurBrowser = GetBrowserVersion(False)
-                        Else
-                            siCurBrowser = GetBrowserVersion(True)
-                        End If
+            'Individual comparison strings
+            Dim sCheckBrowserName As String = String.Empty
+            Dim sCheckVersion As String = String.Empty
 
-                        'Get the kind of filtering
-                        If sIn.IndexOf("=") > 0 Then
-                            If siVersion = siCurBrowser Then bCheck = True
-                        End If
 
-                        If sIn.IndexOf("<") > 0 Then
-                            If siVersion > siCurBrowser Then bCheck = True
-                        End If
+            'Get the Browsers and version condition if a condition exists
+            If iSplit > -1 Then
 
-                        If sIn.IndexOf(">") > 0 Then
-                            If siCurBrowser > siVersion Then bCheck = True
-                        End If
-                End Select
+                sCheckBrowserName = sCheck.Substring(0, iSplit)
+                sCheckVersion = sCheck.Substring(iSplit)
+
+            Else
+
+                sCheckBrowserName = sCheck
+
             End If
 
-            Return (Not (bCheck Xor bInclude))
+
+            'If the browser name matches
+            If (sCheckBrowserName.Trim = sBrowserName) Then
+
+                'If there is no condition
+                If sCheckVersion = "" Then
+                    'If there is no version number
+                    bReturn = True
+                Else
+
+                    bReturn = CheckVersion(sCheckVersion, oBrowserVersion)
+
+                End If
+            End If
+
+            Return (Not (bReturn Xor bInvert))
+
+        End Function
+
+
+        Protected Function CheckVersion(check As String, CurrentVersion As String) As Boolean
+
+            Dim ver As New Version(CurrentVersion)
+
+            Return (CheckVersion(check, ver))
+
+
+        End Function
+
+
+        Protected Function CheckVersion(check As String, CurrentVersion As Version) As Boolean
+            'pass a check, "=10.2", ">10.2", "<10.2" or ">=10", compare with the passed version and return true or false
+            Dim bValue As Boolean = False
+
+            Dim charDigits As Char = "."c
+
+            'Split condition and Version
+            'location of the split character
+            Dim iSplit As Integer = check.LastIndexOfAny(caCondition)
+
+            'Individual comparison strings
+            Dim sCheckCondition As String = String.Empty
+            Dim sCheckVersion As String = String.Empty
+
+
+            'Get the if a condition exists
+            If iSplit > -1 Then
+
+                sCheckCondition = check.Substring(0, iSplit + 1)
+                sCheckVersion = check.Substring(iSplit + 1)
+
+            Else
+                ' if not use equal
+                sCheckCondition = "="
+                sCheckVersion = check
+
+
+            End If
+
+
+            Dim iDigits As Integer = sCheckVersion.Split(charDigits).Length
+
+
+            If iDigits < 2 Then
+
+                sCheckVersion = String.Format("{0}.00", sCheckVersion)
+
+            End If
+
+            Dim verCheck As Version
+
+
+            Try
+
+                verCheck = New Version(sCheckVersion)
+
+            Catch ex As Exception
+
+                verCheck = New Version("99.99")
+
+            End Try
+
+
+            Dim result As VersionIs = CompareVersions(CurrentVersion, verCheck, iDigits)
+
+
+            'In case there was no comparison character passed
+
+
+
+            'Get the kind of filtering
+            If sCheckCondition.Contains("=") Then
+                If result = VersionIs.Same Then bValue = True
+            End If
+
+            If sCheckCondition.Contains("<") Then
+                If result = VersionIs.Smaller Then bValue = True
+            End If
+
+            If sCheckCondition.Contains(">") Then
+                If result = VersionIs.Bigger Then bValue = True
+            End If
+
+
+            Return bValue
+
 
         End Function
 
 
 
-        Protected Function GetBrowserVersion(Optional ByVal bGetMinor As Boolean = True) As Single
-            Dim sVersion As String = Request.Browser.Version.Replace(",", ".")
-            Dim sOut As String = String.Empty
 
-            Dim chSplit() As Char = {"."c}
+        Function CompareVersions(ByVal Version As Version, ByVal CompVersion As Version, ByVal CompareParts As Integer) As VersionIs
 
-            bGetMinor = False
+            ' Pass two net version objects and compare them
+            ' CompareParts, sets what part of the version number should be compared (00.00.00) = 3, (00.00)= 2
 
-            For Each sResult As String In sVersion.Split(chSplit, 2, StringSplitOptions.RemoveEmptyEntries)
-                If bGetMinor = False Then
-                    'only return the major version
-                    sOut = sResult
-                    Exit For
+
+            If Version Is Nothing Then
+
+                Return VersionIs.Smaller
+
+            End If
+
+            If CompVersion Is Nothing Then
+
+                Return VersionIs.Bigger
+
+            End If
+
+            ' Only make the comparison on bigger or smaller for each relevant part
+            ' Same will then be the end result if nothing matched
+
+            If CompareParts >= 1 AndAlso Version.Major <> CompVersion.Major Then
+
+                If Version.Major > CompVersion.Major Then
+                    Return VersionIs.Bigger
                 Else
-                    sResult = sResult.Replace(chSplit, "")
-                    If Not sOut = String.Empty Then
-                        sOut &= sResult
-                    Else
-                        sOut = String.Concat(sResult, chSplit)
-                        Exit For
-                    End If
+                    Return VersionIs.Smaller
                 End If
-            Next
+
+            End If
+
+            If CompareParts >= 2 AndAlso Version.Minor <> CompVersion.Minor Then
+
+                If Version.Minor > CompVersion.Minor Then
+                    Return VersionIs.Bigger
+                Else
+                    Return VersionIs.Smaller
+                End If
+
+            End If
+
+            If CompareParts >= 3 AndAlso Version.Build <> CompVersion.Build Then
+
+                If Version.Build > CompVersion.Build Then
+                    Return VersionIs.Bigger
+                Else
+                    Return VersionIs.Smaller
+                End If
+
+            End If
+
+            If CompareParts >= 4 AndAlso Version.Revision <> CompVersion.Revision Then
+
+                If Version.Revision > CompVersion.Revision Then
+                    Return VersionIs.Bigger
+                Else
+                    Return VersionIs.Smaller
+                End If
+
+            End If
+
+            'No smaller or bigger matched so this must be equal
+
+            Return VersionIs.Same
 
 
-            Return Convert.ToSingle(sOut)
+        End Function
 
+
+
+
+
+        Protected Function GetBrowserVersion() As Version
+
+            'Get a version object for the users browser
+
+            Dim sVersion As String = Request.Browser.Version.Replace(",", ".")
+
+            Return New Version(sVersion)
 
 
         End Function
@@ -2491,12 +2727,10 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
                 'Get the current usermode
-                Dim sUserMode = PortalSettings.UserMode.ToString
+                Dim sUserMode = GetCpState()
 
-                If TabPermissionController.CanAdminPage() = False Then ' Add Can Edit a module test
-                    sUserMode = "none"
-                End If
                 Return (MatchString(sUserMode, sUserModes))
+
             End If
 
         End Function
@@ -2777,21 +3011,9 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 #Region "Helper Functions"
 
-        Private Function CheckDnnVersion(ByVal TestVersion As String) As Integer
-            'Pass a test version, returns > 0 if it's higher equal or lower then the current DNN version
-
-            Dim CompareVersion As New Version(TestVersion.Replace(",", "."))
-            Dim DnnVer As Version = DotNetNukeContext.Current.Application.Version
-
-            Dim DnnVersion As New Version(DotNetNukeContext.Current.Application.Version.ToString().Replace(",", "."))
-
-            Return DnnVersion.CompareTo(CompareVersion)
 
 
-        End Function
-
-
-        Protected Function GetBrowser() As String
+        Protected Function GetBrowserName() As String
 
             Dim sOut As String = Request.Browser.Browser.ToLower
 
@@ -2945,7 +3167,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             For Each s As String In Regex.Split(sParameters, ",", RegexOptions.IgnoreCase)
 
                 'Check if the string contains an invert
-                Dim bInvert As Boolean = CheckInvert(s)
+                Dim bInvert As Boolean = ParseInvert(s)
 
                 'Escape the string for regex
                 s = Regex.Escape(s)
@@ -2994,8 +3216,8 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Private Function CheckInvert(ByRef sIn As String) As Boolean
-            'Check for Invert (!)
+        Private Function ParseInvert(ByRef sIn As String) As Boolean
+            'Check for Invert (!) and return the passed value without it
             Dim sTest As String = "^" & _sNOT
 
             If Regex.IsMatch(sIn, sTest) Then
@@ -3029,6 +3251,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
         Private Function ProcessTokens(ByVal sOriginal As String, Type As TextType) As String
+
             'Allow the use of all kinds of DNN attributes to be used in templates
             'Will parse the passed string
 
@@ -3075,6 +3298,22 @@ Namespace FortyFingers.Dnn.SkinObjects
             'Get Control Panel Class
             If MatchToken(sOriginal, "[CPState]") Then
                 sOriginal = ReplaceToken(sOriginal, "[CPState]", GetCpState, Type)
+            End If
+
+            'Get DNN Version Class, but only for unauthenticated users
+
+            If MatchToken(sOriginal, "[DnnVersion]") Then
+
+                Dim val As String = String.Empty
+
+                If Not GetCpState() = strUserModeNone Then
+
+                    val = "DNN" & CurrentDnnVersion(1)
+
+                End If
+
+                sOriginal = ReplaceToken(sOriginal, "[DnnVersion]", val, TextType.CssClass)
+
             End If
 
 
@@ -3368,16 +3607,20 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
         Private Function GetBrowserClass(max As Integer, BrowserFilter As String) As String
+            'Get a class for the browser, max is the maximum version
 
             Dim sOut As New StringBuilder
 
-            Dim sBrowser As String = GetBrowser()
+            'Get the browser name
+            Dim sUserBrowserName As String = GetBrowserName()
 
-            If Regex.IsMatch(sBrowser, BrowserFilter, RegexOptions.IgnoreCase) Then
 
-                Dim iVersion As Integer = Math.Abs(CType(GetBrowserVersion(), Integer))
+            If Regex.IsMatch(sUserBrowserName, BrowserFilter, RegexOptions.IgnoreCase) Then
 
-                sOut.Append(String.Format("{0}{1}", sBrowser, iVersion.ToString))
+                Dim iVersion As Integer = GetBrowserVersion().Major
+
+
+                sOut.Append(String.Format("{0}{1}", sUserBrowserName, iVersion.ToString))
 
 
                 If max > iVersion Then
@@ -3386,7 +3629,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
                     For x = iVersion + 1 To max
 
-                        sOut.Append(String.Format(" lt-{0}{1}", sBrowser, x))
+                        sOut.Append(String.Format(" lt-{0}{1}", sUserBrowserName, x))
 
                     Next
 
@@ -3455,7 +3698,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             'DNN 5.2 minimum
             For Each oTab As DotNetNuke.Entities.Tabs.TabInfo In TabController.GetTabsByParent(iParentId, PortalSettings.PortalId)
-                If Navigation.CanShowTab(oTab, False, False) And oTab.CultureCode = PortalSettings.CultureCode Then
+                If Navigation.CanShowTab(oTab, False, False) And (oTab.CultureCode = String.Empty OrElse oTab.CultureCode = PortalSettings.CultureCode) Then
                     iOrder += 1
                     If oTab.TabID = TabId Then
                         Exit For
