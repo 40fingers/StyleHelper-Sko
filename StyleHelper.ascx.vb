@@ -1,6 +1,9 @@
+Option Strict On
+
 Imports DotNetNuke
 Imports DotNetNuke.Security.Permissions
 Imports System.Collections.Generic
+Imports DotNetNuke.Application
 
 
 
@@ -30,6 +33,25 @@ Namespace FortyFingers.Dnn.SkinObjects
         Enum InjectPosition
             Top = 0
             Bottom = 1
+        End Enum
+
+        Enum TextType
+
+            Text = 0
+            CssClass = 1
+            Id = 2
+            EncodedHtml = 3
+
+        End Enum
+
+
+        Enum CssClassCases
+
+            None = 0
+            lowercase = 1
+            UPPERCASE = 2
+            PascalCase = 3
+
         End Enum
 
 #End Region
@@ -108,6 +130,21 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Property
 
 
+        Private _MetaNameToLower As Boolean
+        ''' <summary>
+        ''' Set the DNN core meta tag name attributes to lowercase
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property MetaNameToLower() As Boolean
+            Get
+                Return _MetaNameToLower
+            End Get
+            Set(ByVal value As Boolean)
+                _MetaNameToLower = value
+            End Set
+        End Property
+
+
 
         Private _sRemoveCssFile As String = String.Empty
         ''' <summary>
@@ -153,7 +190,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property FilterRemove() As Boolean
-            'Should this be conditional?
             Set(ByVal Value As Boolean)
                 _bFilterRemove = Value
             End Set
@@ -228,7 +264,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property FilterAdd() As Boolean
-            'Add properties at the end of the head, if false at the top
             Set(ByVal Value As Boolean)
                 _bFilterAdd = Value
             End Set
@@ -285,7 +320,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property BasePath() As String
-            'Add skinpath to the path of the links
             Set(ByVal Value As String)
                 _sBasePath = Value
             End Set
@@ -304,14 +338,14 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property AddAtEnd() As Boolean
-            'Add properties at the end of the head, if flase at the top
             Set(ByVal Value As Boolean)
                 _bAddAtEnd = Value
             End Set
             Get
-                Return _bAddAtEnd.ToString
+                Return _bAddAtEnd
             End Get
         End Property
+
 
 
         Private _bCorrectModuleCss As Boolean
@@ -331,6 +365,21 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Property
 
 
+        Private _bForceCssOrder As Boolean
+        ''' <summary>
+        ''' Forces Skin.css to be loaded beforelast and portal.css last.
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property ForceSkinCssOrder() As Boolean
+            Get
+                Return _bForceCssOrder
+            End Get
+            Set(ByVal value As Boolean)
+                _bForceCssOrder = value
+            End Set
+        End Property
+
+
 
 
         Private _sCssMedia As String = "screen"
@@ -341,7 +390,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property CssMedia() As String
-            'Set CSS media property
             Set(ByVal Value As String)
                 _sCssMedia = Value
             End Set
@@ -359,7 +407,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <value></value>
         ''' <remarks></remarks>
         Public Property ShowInfo() As Boolean
-            'Write ShowInfo info?
             Get
                 Return _bShowInfo
             End Get
@@ -387,6 +434,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             End Get
 
         End Property
+
 
 
         ''' <summary>
@@ -422,6 +470,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             End Set
         End Property
 
+
         Private _sAddToBodyBottom As String
         ''' <summary>
         ''' Add at the bottom of the body element
@@ -445,7 +494,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Dim _bFilterBodyClass As Boolean = False
         ''' <summary>
-        ''' Filter adding the body class or not?
+        ''' Filter adding the body class or not (by default false)?
         ''' </summary>
         ''' <value>False</value>
         ''' <returns></returns>
@@ -463,7 +512,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Dim _sBodyClass As String = "Page-[PageName] Level-[PageLevel] [BcName] [BcId] [BcNr] CP-[CPState] [PageType] [UserPageRoles] Cult-[Culture] Lang-[Language] [IE]"
+        Dim _sBodyClass As String = "Page-[Page:Name] Level-[Page:Level] [BcName] [BcId] [BcNr] CP-[CPState] [PageType] [UserPageRoles] Cult-[Culture] Lang-[Language] [IE]"
 
         ''' <summary>
         ''' Template for the page class
@@ -479,6 +528,39 @@ Namespace FortyFingers.Dnn.SkinObjects
                 'If the template is set, set adding the class to true.
                 AddBodyClass = True
                 _sBodyClass = value
+            End Set
+        End Property
+
+
+        Dim _sAddToBodyClass As String = String.Empty
+        ''' <summary>
+        ''' Add something to the existing / prevously set body class, used when you insert a class conditinally.
+        ''' </summary>
+        ''' <returns></returns>
+
+        Public Property AddToBodyClass() As String
+            Get
+                Return (_sAddToBodyClass)
+            End Get
+            Set(ByVal value As String)
+                'If the template is set, set adding the class to true.
+                AddBodyClass = True
+                _sAddToBodyClass = value
+            End Set
+        End Property
+
+
+        Private _sCssClassCase As String = "none"
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property CssClassCase() As String
+            Get
+                Return _sCssClassCase
+            End Get
+            Set(ByVal value As String)
+                _sCssClassCase = value
             End Set
         End Property
 
@@ -592,7 +674,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfBrowser() As String
-            'List of browsers to load this for
             Set(ByVal value As String)
                 _sIfBrowser = value
             End Set
@@ -611,7 +692,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfMobile() As Boolean
-            'List of browsers to load this for
             Set(ByVal value As Boolean)
                 If value Then
                     _iIfMobile = 1
@@ -620,7 +700,11 @@ Namespace FortyFingers.Dnn.SkinObjects
                 End If
             End Set
             Get
-                IIf(_iIfMobile = 1, IfMobile = True, IfMobile = False)
+                If _iIfMobile = 1 Then
+                    IfMobile = True
+                Else
+                    IfMobile = False
+                End If
             End Get
         End Property
 
@@ -635,7 +719,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfUserAgentString() As String
-            'List of browsers to load this for
             Set(ByVal value As String)
                 _sIfUserAgentString = value
             End Set
@@ -653,7 +736,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfUserNameAgentString() As String
-            'List of browsers to load this for
             Set(ByVal value As String)
                 _sIfUserAgentString = value
             End Set
@@ -673,7 +755,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfUserName() As String
-            'List of browsers to load this for
             Set(ByVal value As String)
                 _sIfUserName = value
             End Set
@@ -712,7 +793,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfRole() As String
-            '
             Set(ByVal value As String)
                 _sIfRole = value
             End Set
@@ -732,7 +812,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfNoViewRights() As Boolean
-            '
             Set(ByVal value As Boolean)
                 _bNoViewRights = value
             End Set
@@ -836,6 +915,33 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 #End Region
 
+#Region "Public Properties Info"
+
+
+
+        Private _strTest As String = "Test"
+        Public Property Test() As String
+            Get
+                Return _strTest
+            End Get
+            Set(ByVal value As String)
+                _strTest = value
+            End Set
+        End Property
+
+
+        Public ReadOnly Property Portal() As PortalInfo
+            Get
+                Dim _p As New PortalInfo
+
+                Return _p
+
+            End Get
+        End Property
+
+
+#End Region
+
 
 #Region "Client Detect Properties"
 
@@ -850,7 +956,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property DetectMobileRegex1() As String
-            'List of browsers to load this for
             Set(ByVal value As String)
                 _sDetectMobileRegex1 = value
             End Set
@@ -887,7 +992,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property DetectMobileRegex2() As String
-            'List of browsers to load this for
             Set(ByVal value As String)
                 _sDetectMobileRegex2 = value
             End Set
@@ -1015,7 +1119,6 @@ Namespace FortyFingers.Dnn.SkinObjects
         'For legacy support and renamed properties
 
         Public Property IfMobileRX1() As String
-            'List of browsers to load this for
             Set(ByVal value As String)
                 _sDetectMobileRegex1 = value
             End Set
@@ -1026,7 +1129,6 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
         Public Property IfMobileRX2() As String
-            'List of browsers to load this for
             Set(ByVal value As String)
                 _sDetectMobileRegex2 = value
             End Set
@@ -1048,12 +1150,13 @@ Namespace FortyFingers.Dnn.SkinObjects
         ''' <remarks></remarks>
         Public ReadOnly Property ShowBrowserVersion(Optional ByVal ShowMinor As Boolean = True) As String
             Get
-                Return GetBrowserVersion(ShowMinor)
+                Return GetBrowserVersion(ShowMinor).ToString
+
             End Get
         End Property
 
         ''' <summary>
-        ''' Return the browser name
+        ''' Returns the browser name
         ''' </summary>
         ''' <value></value>
         ''' <returns></returns>
@@ -1144,6 +1247,10 @@ Namespace FortyFingers.Dnn.SkinObjects
                 GoCorrectModuleCss()
             End If
 
+            If ForceSkinCssOrder Then
+                GoForceCssOrder()
+            End If
+
             If Not RemoveCssFile = String.Empty Or Not RemoveJsFile = String.Empty Then
                 If FilterRemove = False Or bConditions Then
                     ProcessRemoveFiles()
@@ -1169,12 +1276,18 @@ Namespace FortyFingers.Dnn.SkinObjects
                 End If
             End If
 
+            If MetaNameToLower Then
+                MetaNameLowerCase()
+            End If
+
 
             If Not AddMetaTags = String.Empty Then
                 If FilterMeta = False Or bConditions Then
                     ProcessMetaTags()
                 End If
             End If
+
+
 
             If Not (AddCssFile = String.Empty And AddJsFile = String.Empty) Then
                 If FilterAdd = False Or bConditions Then
@@ -1195,17 +1308,26 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             'Non conditional Options
             If FilterBodyClass = False Or bConditions Then
+
                 If AddBodyClass Then
-                    ProcessPageClassTemplate(BodyClass)
+
+                    Dim sBC As String = BodyClass
+
+                    If bConditions Then sBC &= " " & AddToBodyClass
+
+                    ProcessPageClassTemplate(sBC)
+
                 End If
+
             End If
+
 
 
             ProcessDoctype()
 
             'Add the HTML attributes, only needed for DNN 6+
             If CheckDnnVersion("6.0") >= 0 Then
-                Dim oAttributes As Literal = Me.Page.FindControl("attributeList")
+                Dim oAttributes As Literal = CType(Me.Page.FindControl("attributeList"), Literal)
                 If Not oAttributes Is Nothing Then
                     oAttributes.Text = HtmlAttributeList()
                 End If
@@ -1243,14 +1365,14 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             If DotNetNuke.Security.Permissions.TabPermissionController.CanAddContentToPage Or DotNetNuke.Security.Permissions.TabPermissionController.CanManagePage Then
                 Select Case PortalSettings.UserMode
-                    Case Entities.Portals.PortalSettings.Mode.View
+                    Case DotNetNuke.Entities.Portals.PortalSettings.Mode.View
 
                         Return "View"
 
-                    Case Entities.Portals.PortalSettings.Mode.Edit
+                    Case DotNetNuke.Entities.Portals.PortalSettings.Mode.Edit
                         Return "Edit"
 
-                    Case Entities.Portals.PortalSettings.Mode.Layout
+                    Case DotNetNuke.Entities.Portals.PortalSettings.Mode.Layout
                         Return "Layout"
 
                 End Select
@@ -1340,8 +1462,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Sub ProcessRemoveMeta()
             'Remove Meta tags, some are literals, some are HtmlMeta controls
-            Dim oHead As HtmlGenericControl = Me.Page.FindControl("Head")
-
+            Dim oHead As HtmlGenericControl = CType(Me.Page.FindControl("Head"), HtmlGenericControl)
 
             For Each s As String In SplitString(RemoveMeta, "||")
 
@@ -1366,7 +1487,8 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Sub ProcessChangeMeta()
             'Remove Meta tags, some are literals, some are HtmlMeta controls
-            Dim oHead As HtmlGenericControl = Me.Page.FindControl("Head")
+            Dim oHead As HtmlGenericControl = CType(Me.Page.FindControl("Head"), HtmlGenericControl)
+
 
             For Each s As String In Regex.Split(ChangeMeta, Regex.Escape("||"))
 
@@ -1376,9 +1498,9 @@ Namespace FortyFingers.Dnn.SkinObjects
                     Dim sAttribute As String = String.Empty ' Store the attribute to look for
 
                     'Get id and attribute to change if an attribute was passed
-                    If s.Split("|").Length = 2 Then
-                        sAttribute = s.Split("|")(1)
-                        s = s.Split("|")(0)
+                    If s.Split("|"c).Length = 2 Then
+                        sAttribute = s.Split("|"c)(1)
+                        s = s.Split("|"c)(0)
 
                         'Get the id of the element to change
                         Dim oId As New ParameterValue(s, "=")
@@ -1415,6 +1537,38 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
+        Private Sub MetaNameLowerCase()
+
+            Dim strAttr = "name"
+            Dim oHead As HtmlGenericControl = CType(Me.Page.FindControl("Head"), HtmlGenericControl)
+
+
+
+
+
+
+            Try
+                For Each oControl As Control In oHead.Controls
+                    If Not oControl Is Nothing And TypeOf oControl Is HtmlMeta Then
+                        'Try to parse to meta
+                        Dim oMeta As HtmlMeta = CType(oControl, HtmlMeta)
+                        'Get the parameter
+                        If Not oMeta.Attributes(strAttr) Is Nothing Then
+                            Dim sNewVal = oMeta.Attributes(strAttr).ToLower
+                            'Replace * with the original value 
+                            oMeta.Attributes(strAttr) = sNewVal
+                        End If
+
+                    End If
+
+                Next
+            Catch ex As Exception
+                DotNetNuke.Services.Exceptions.LogException(ex)
+            End Try
+
+
+        End Sub
+
 
         Private Sub UnloadCss(ByVal sFileName As String)
 
@@ -1447,10 +1601,16 @@ Namespace FortyFingers.Dnn.SkinObjects
             If Not oIncludes Is Nothing Then
 
                 'Get list of child items client resource controls
-                Dim lstControl2Remove As New List(Of Control)
+                Dim lstControl2Remove As New List(Of String)
 
-                'Loop though Items
-                For Each oCssControl As Control In oIncludes.Controls()
+
+                Dim iItems As Integer = oIncludes.Controls.Count - 1
+
+                'Loop though Items reverse
+                For i = iItems To 0 Step -1
+
+                    Dim oCssControl As Control = oIncludes.Controls(i)
+
                     'Check if it's a CssInclude
                     Select Case oCssControl.GetType.ToString
                         Case "DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude"
@@ -1458,18 +1618,14 @@ Namespace FortyFingers.Dnn.SkinObjects
                             'Check the path
                             If CheckStringFound(oCSSRemove.FilePath, sFileName) Then
                                 'Add to the list of controls to remove
-                                lstControl2Remove.Add(oCssControl)
+                                oIncludes.Controls.RemoveAt(i)
+
                             End If
 
                     End Select
-                Next
-
-                'Loop through found controls and remove them
-                For Each oCss2remove As Control In lstControl2Remove
-
-                    oIncludes.Controls.Remove(oCss2remove)
 
                 Next
+
 
             End If
 
@@ -1498,9 +1654,48 @@ Namespace FortyFingers.Dnn.SkinObjects
                         Case "DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude"
                             Dim oCssItem As DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude = CType(oCssControl, DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude)
                             'Check the path
-                            If Regex.IsMatch(oCssItem.FilePath, "/Desktopmodules/|/admin/", RegexOptions.IgnoreCase) Then
+                            If Regex.IsMatch(oCssItem.FilePath, "/Desktopmodules/|/admin/|/shared/|/WebControlSkin/", RegexOptions.IgnoreCase) Then
                                 'Add to the list of controls to remove
-                                oCssItem.Priority = 11
+                                If oCssItem.Priority > 15 Then
+                                    oCssItem.Priority = 12
+                                End If
+
+                            End If
+
+                    End Select
+                Next
+
+            End If
+
+        End Sub
+
+
+        Private Sub GoForceCssOrder()
+
+            'Get the CRM control
+            Dim oIncludes As Control = Me.Page.FindControl("ClientResourceIncludes")
+            If Not oIncludes Is Nothing Then
+
+                'Get list of child items client resource controls
+                Dim CssControls As New List(Of Control)
+
+                'Loop though Items
+                For Each oCssControl As Control In oIncludes.Controls()
+                    'Check if it's a CssInclude
+                    Select Case oCssControl.GetType.ToString
+                        Case "DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude"
+                            Dim oCssItem As DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude = CType(oCssControl, DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude)
+                            'Check the path
+                            If Regex.IsMatch(oCssItem.FilePath, "/Skin.css|/Portal.css", RegexOptions.IgnoreCase) Then
+                                'Add to the list of controls to remove
+                                Select Case oCssItem.Priority
+                                    Case 15
+                                        oCssItem.Priority = 1000
+                                    Case 35
+                                        oCssItem.Priority = 1001
+
+                                End Select
+
                             End If
 
                     End Select
@@ -1561,7 +1756,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 'Get the individual meta Tags
                 For Each s As String In SplitString(AddMetaTags, "|")
                     'Split name and Value
-                    Dim m As String() = s.Split(":")
+                    Dim m As String() = s.Split(":"c)
                     If m.Length = 2 Then
                         WriteMeta(m(0).Trim, m(1).Trim)
                     End If
@@ -1642,11 +1837,9 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
         Private Sub ProcessAdd2Head()
-            'Process the string that are to be added to the head of the page
+            'Process the string that is to be added to the head of the page
 
-            For Each s As String In SplitString(AddToHead, "||")
-                Add2Head(s)
-            Next
+            Add2Head(AddToHead)
 
         End Sub
 
@@ -1656,7 +1849,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             sIn = PathTokenReplace(sIn)
 
             'Get the head element
-            Dim oHead As HtmlGenericControl = Me.Page.FindControl("Head")
+            Dim oHead As HtmlGenericControl = CType(Me.Page.FindControl("Head"), HtmlGenericControl)
 
             'Create literal and parse the tokens
             Dim litAdd As New Literal
@@ -1681,9 +1874,7 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Sub ProcessRemoveFromHead()
             'Pass attribute and value and test to remove
             'Will not work on most js and css files
-            Dim oHead As HtmlGenericControl = Me.Page.FindControl("Head")
-
-
+            Dim oHead As HtmlGenericControl = CType(Me.Page.FindControl("Head"), HtmlGenericControl)
 
             For Each s As String In SplitString(RemoveFromHead, "||")
 
@@ -1696,7 +1887,8 @@ Namespace FortyFingers.Dnn.SkinObjects
 
                                 'oControl.Visible = False
                                 Dim oLink As System.Web.UI.HtmlControls.HtmlLink
-                                oLink = oControl
+                                oLink = CType(oControl, HtmlLink)
+
                                 If oLink.Attributes.Item(oValPair.Parameter) = oValPair.Value1 Then
                                     oControl.Visible = False
                                 End If
@@ -1705,14 +1897,14 @@ Namespace FortyFingers.Dnn.SkinObjects
 
                                 'oControl.Visible = False
                                 Dim oMeta As System.Web.UI.HtmlControls.HtmlMeta
-                                oMeta = oControl
+                                oMeta = CType(oControl, HtmlMeta)
                                 If oMeta.Attributes.Item(oValPair.Parameter) = oValPair.Value1 Then
                                     oControl.Visible = False
                                 End If
 
                             Case "System.Web.UI.WebControls.Literal"
                                 Dim oLiteral As System.Web.UI.WebControls.Literal
-                                oLiteral = oControl
+                                oLiteral = CType(oControl, Literal)
                                 Dim sFind As String = oValPair.Parameter & "\s?=\s?[""']" & oValPair.Value1 & "[""']"
                                 If Regex.IsMatch(oLiteral.Text, sFind, RegexOptions.IgnoreCase) Then
                                     oControl.Visible = False
@@ -1736,9 +1928,9 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Sub ProcessHtmlAttributes()
             'Process pipe separated list of attributes for the HTML element
             For Each m As String In SplitString(AddHtmlAttribute, "|")
-                Dim s As String() = m.Split(",")
+                Dim s As String() = m.Split(","c)
                 If s.Length = 2 Then
-                    AddNewHtmlAttribute(m.Split(",")(0), m.Split(",")(1))
+                    AddNewHtmlAttribute(m.Split(","c)(0), m.Split(","c)(1))
                 End If
             Next
 
@@ -2234,23 +2426,30 @@ Namespace FortyFingers.Dnn.SkinObjects
             Dim sVersion As String = Request.Browser.Version.Replace(",", ".")
             Dim sOut As String = String.Empty
 
+            Dim chSplit() As Char = {"."c}
 
-            For Each sResult As String In sVersion.Split(".", 2, StringSplitOptions.RemoveEmptyEntries)
+            bGetMinor = False
+
+            For Each sResult As String In sVersion.Split(chSplit, 2, StringSplitOptions.RemoveEmptyEntries)
                 If bGetMinor = False Then
                     'only return the major version
                     sOut = sResult
                     Exit For
                 Else
-                    sResult = sResult.Replace(".", "")
+                    sResult = sResult.Replace(chSplit, "")
                     If Not sOut = String.Empty Then
                         sOut &= sResult
                     Else
-                        sOut = String.Concat(sResult, ".")
+                        sOut = String.Concat(sResult, chSplit)
+                        Exit For
                     End If
                 End If
             Next
 
-            Return Val(sOut)
+
+            Return Convert.ToSingle(sOut)
+
+
 
         End Function
 
@@ -2313,10 +2512,21 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
 
+
+
                 'Regular Check, user in roles
                 Dim sAllroles As String = GetUserroles()
 
-                'As there is no superuser role add it when the current user is a superuser
+                If sRoles.ToLower = "none" Then
+                    If sAllroles = String.Empty Then
+                        Return True
+                    Else
+                        Return False
+                    End If
+                End If
+
+
+                'As there is no superuser role, so add it for superusers
                 If UserController.GetCurrentUserInfo.IsSuperUser Then
                     sAllroles = CharSepStrAdd(sAllroles, "SuperUsers", "|")
                 End If
@@ -2571,8 +2781,9 @@ Namespace FortyFingers.Dnn.SkinObjects
             'Pass a test version, returns > 0 if it's higher equal or lower then the current DNN version
 
             Dim CompareVersion As New Version(TestVersion.Replace(",", "."))
+            Dim DnnVer As Version = DotNetNukeContext.Current.Application.Version
 
-            Dim DnnVersion As New Version(PortalSettings.Version.Replace(",", "."))
+            Dim DnnVersion As New Version(DotNetNukeContext.Current.Application.Version.ToString().Replace(",", "."))
 
             Return DnnVersion.CompareTo(CompareVersion)
 
@@ -2583,9 +2794,16 @@ Namespace FortyFingers.Dnn.SkinObjects
         Protected Function GetBrowser() As String
 
             Dim sOut As String = Request.Browser.Browser.ToLower
+
             'Correct change of returned browser for IE 11
             If sOut = "internetexplorer" Then sOut = "ie"
             If sOut = "internet explorer" Then sOut = "ie"
+
+            'Workaround for Edge (not in the browser capabilites file)
+            If Regex.IsMatch(Request.UserAgent, "Edge\/\d+") Then
+                sOut = "edge"
+            End If
+
             Return sOut
 
         End Function
@@ -2768,7 +2986,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 If sCheck = "/" Then sCheck = "/.*"
                 Return Regex.IsMatch(sIn, sCheck, RegexOptions.IgnoreCase)
             Catch ex As Exception
-                Return ""
+                Return False
             End Try
 
         End Function
@@ -2802,29 +3020,87 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Function
 
 
-
         Private Function ProcessTokens(ByVal sOriginal As String) As String
+
+            Return ProcessTokens(sOriginal, TextType.Text)
+
+        End Function
+
+
+
+        Private Function ProcessTokens(ByVal sOriginal As String, Type As TextType) As String
             'Allow the use of all kinds of DNN attributes to be used in templates
             'Will parse the passed string
 
             'Replace PortalId
-            sOriginal = Regex.Replace(sOriginal, "\[PortalId\]", PortalSettings.PortalId.ToString, RegexOptions.IgnoreCase)
-            sOriginal = Regex.Replace(sOriginal, "\[Portal:Id\]", PortalSettings.PortalId.ToString, RegexOptions.IgnoreCase)
-            sOriginal = Regex.Replace(sOriginal, "\[Portal:Alias\]", PortalSettings.PortalAlias.HTTPAlias, RegexOptions.IgnoreCase)
+            sOriginal = ReplaceToken(sOriginal, "[Portal:Id]", PortalSettings.PortalId.ToString, TextType.Text)
+            sOriginal = ReplaceToken(sOriginal, "[PortalId]", PortalSettings.PortalId.ToString, TextType.Text) ' Legacy
+
+            sOriginal = ReplaceToken(sOriginal, "[Portal:Alias]", PortalSettings.PortalAlias.HTTPAlias, Type)
+            sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Root]", GetParentAlias(), Type)
+            sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Protocol]", GetAliasProtocol(), Type)
+
+
+            sOriginal = ReplaceToken(sOriginal, "[Portal:Name]", PortalSettings.PortalName, Type)
+
 
             'Replace Page data
             Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = GetTabData()
 
+            sOriginal = ReplaceToken(sOriginal, "[Page:Name]", oTab.TabName, Type)
+            sOriginal = ReplaceToken(sOriginal, "[PageName]", oTab.TabName, Type) ' Legacy
 
-            sOriginal = Regex.Replace(sOriginal, "\[Page:Name\]", oTab.TabName, RegexOptions.IgnoreCase)
-            sOriginal = Regex.Replace(sOriginal, "\[Page:Title\]", oTab.Title, RegexOptions.IgnoreCase)
-            sOriginal = Regex.Replace(sOriginal, "\[Page:Description\]", oTab.Description, RegexOptions.IgnoreCase)
-            sOriginal = Regex.Replace(sOriginal, "\[Page:Url\]", GetFullUrl, RegexOptions.IgnoreCase)
-            sOriginal = Regex.Replace(sOriginal, "\[Page:RelativeUrl\]", System.Web.HttpContext.Current.Request.RawUrl, RegexOptions.IgnoreCase)
-            sOriginal = Regex.Replace(sOriginal, "\[Page:Id\]", oTab.TabID.ToString, RegexOptions.IgnoreCase)
+            sOriginal = ReplaceToken(sOriginal, "[Page:Level]", oTab.Level.ToString, TextType.Text)
+            sOriginal = ReplaceToken(sOriginal, "[PageLevel]", oTab.Level.ToString, TextType.Text) ' Legacy
 
-            sOriginal = Regex.Replace(sOriginal, "\[Page:Skin\]", oTab.SkinSrc, RegexOptions.IgnoreCase)
-            sOriginal = Regex.Replace(sOriginal, "\[Page:Container\]", oTab.ContainerSrc, RegexOptions.IgnoreCase)
+            sOriginal = ReplaceToken(sOriginal, "[Page:Title]", oTab.Title, Type)
+
+            sOriginal = ReplaceToken(sOriginal, "[Page:Description]", oTab.Description, Type)
+            sOriginal = ReplaceToken(sOriginal, "[Page:Url]", GetFullUrl, Type)
+            sOriginal = ReplaceToken(sOriginal, "[Page:RelativeUrl]", System.Web.HttpContext.Current.Request.RawUrl, Type)
+            sOriginal = ReplaceToken(sOriginal, "[Page:Id]", oTab.TabID.ToString, TextType.Text)
+
+            sOriginal = ReplaceToken(sOriginal, "[Page:Skin]", oTab.SkinSrc, Type)
+            sOriginal = ReplaceToken(sOriginal, "[Page:Container]", oTab.ContainerSrc, Type)
+
+            sOriginal = ReplaceToken(sOriginal, "[Page:IconFile]", oTab.IconFile, Type)
+            sOriginal = ReplaceToken(sOriginal, "[Page:IconFileLarge]", oTab.IconFileLarge, Type)
+
+
+            sOriginal = ReplaceToken(sOriginal, "[Date]", Now().ToString("yyyyMMdd"), TextType.Text)
+
+
+            'As these are calculated Values, first check if there is a match for the Token
+
+            'Get Control Panel Class
+            If MatchToken(sOriginal, "[CPState]") Then
+                sOriginal = ReplaceToken(sOriginal, "[CPState]", GetCpState, Type)
+            End If
+
+
+            'Get Culture Class
+            If MatchToken(sOriginal, "[Culture]") Then
+                sOriginal = ReplaceToken(sOriginal, "[Culture]", CurrentCulture, Type)
+            End If
+
+
+            'Get Language Class
+            If MatchToken(sOriginal, "[Language]") Then
+                sOriginal = ReplaceToken(sOriginal, "[Language]", CurrentLanguage, Type)
+            End If
+
+
+            'Get PageType Class
+            If MatchToken(sOriginal, "[PageType]") Then
+                sOriginal = ReplaceToken(sOriginal, "[PageType]", GetPageType, TextType.Text)
+            End If
+
+
+            'Get Browser Class
+            If MatchToken(sOriginal, "[IE]") Then
+                sOriginal = ReplaceToken(sOriginal, "[IE]", GetBrowserClass(12, "ie"), TextType.Text)
+            End If
+
 
 
             'Replace QS Parameters
@@ -2846,18 +3122,67 @@ Namespace FortyFingers.Dnn.SkinObjects
 
                         If sQS = String.Empty Then
                             'Return "" if querystring not found
-                            sOriginal = Regex.Replace(sOriginal, Regex.Escape(m.Value), "")
+                            sOriginal = ReplaceToken(sOriginal, m.Value, String.Empty, Type)
                         Else
-                            sOriginal = Regex.Replace(sOriginal, Regex.Escape(m.Value), sQS)
+                            sOriginal = ReplaceToken(sOriginal, m.Value, sQS, Type)
                         End If
 
                 End Select
 
             End If
 
-
-
             Return (sOriginal)
+
+        End Function
+
+
+        Private Function GetParentAlias() As String
+
+            Return Request.Url.Host
+
+        End Function
+
+        Private Function GetAliasProtocol() As String
+
+            Return Request.Url.Scheme
+
+        End Function
+
+
+
+        Private Function ReplaceToken(Original As String, Token As String, Value As String, Type As TextType) As String
+
+
+            'Replace an indivifual token
+            If Value Is Nothing Then
+                Value = ""
+            End If
+
+            'Convert text to valid string for that type, when 
+            Select Case Type
+
+                Case TextType.CssClass
+
+                    Value = CreateValidCssClass(Value)
+
+                Case TextType.Text
+
+                    'Do nothing
+
+            End Select
+
+            'Escape Token
+            Token = Regex.Escape(Token)
+
+            Return Regex.Replace(Original, Token, Value, RegexOptions.IgnoreCase)
+
+        End Function
+
+        Private Function MatchToken(Original As String, Token As String) As Boolean
+
+            'Test if there is a match
+
+            Return Regex.IsMatch(Original, Regex.Escape(Token), RegexOptions.IgnoreCase)
 
         End Function
 
@@ -2898,19 +3223,11 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             Dim oTab As DotNetNuke.Entities.Tabs.TabInfo
 
+            Template = SetCssClassCase(Template)
 
-            'Add Current Page Name as Class
-            If Regex.IsMatch(Template, "\[PageName\]", RegexOptions.IgnoreCase) Then
+            'Process Single Tokens
+            Template = ProcessTokens(Template, TextType.CssClass)
 
-                sOut = CreateValidCssClass(PortalSettings.ActiveTab.TabName)
-                Template = Regex.Replace(Template, "\[PageName\]", sOut, RegexOptions.IgnoreCase)
-            End If
-
-            'Add Current Level as Class
-            If Regex.IsMatch(Template, "\[PageLevel\]", RegexOptions.IgnoreCase) Then
-
-                Template = Regex.Replace(Template, "\[PageLevel\]", PortalSettings.ActiveTab.Level.ToString, RegexOptions.IgnoreCase)
-            End If
 
             sOut = String.Empty
 
@@ -2958,32 +3275,6 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Template = Regex.Replace(Template, "\[UserPageRoles\]", GetUserPageRolesClass, RegexOptions.IgnoreCase)
             End If
 
-            'Get Bc Role Class
-            If Regex.IsMatch(Template, "\[CPState\]", RegexOptions.IgnoreCase) Then
-                Template = Regex.Replace(Template, "\[CPState\]", GetCpState, RegexOptions.IgnoreCase)
-            End If
-
-
-            'Get Culture Class
-            If Regex.IsMatch(Template, "\[Culture\]", RegexOptions.IgnoreCase) Then
-                Template = Regex.Replace(Template, "\[Culture\]", CurrentCulture, RegexOptions.IgnoreCase)
-            End If
-
-            'Get Language Class
-            If Regex.IsMatch(Template, "\[Language\]", RegexOptions.IgnoreCase) Then
-                Template = Regex.Replace(Template, "\[Language\]", CurrentLanguage, RegexOptions.IgnoreCase)
-            End If
-
-
-            'Get PageType Class
-            If Regex.IsMatch(Template, "\[PageType\]", RegexOptions.IgnoreCase) Then
-                Template = Regex.Replace(Template, "\[PageType\]", GetPageType, RegexOptions.IgnoreCase)
-            End If
-
-            'Get Browser Class
-            If Regex.IsMatch(Template, "\[IE\]", RegexOptions.IgnoreCase) Then
-                Template = Regex.Replace(Template, "\[IE\]", GetBrowserClass(12, "ie"), RegexOptions.IgnoreCase)
-            End If
 
 
             WritePageClass(Template.Trim)
@@ -2998,7 +3289,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             'Please note that host is treaded as a member of all roles (so all roles will be reurned if you are logged in as Host)
 
             'Get Authorized roles for this page
-            Dim sRoles As String = PortalSettings.ActiveTab.AuthorizedRoles
+            Dim sRoles As String = PortalSettings.ActiveTab.TabPermissions.ToString("VIEW")
             Dim sOut As String = String.Empty
 
             If sRoles > "" Then
@@ -3039,9 +3330,16 @@ Namespace FortyFingers.Dnn.SkinObjects
                 sOut = ConcatCssClasses(sOut, "Splash", sTemplate, False)
             End If
 
+
+            ' Login page
             If iTabId = PortalSettings.LoginTabId Or Request.RawUrl.Contains("/ctl/Login/") Or Request.RawUrl.Contains("/Login?") Then
                 sOut = ConcatCssClasses(sOut, "Login", sTemplate, False)
+            ElseIf Request.RawUrl.Contains("/ctl/") Then
+
+                'Edit page
+                sOut = ConcatCssClasses(sOut, "Edit", sTemplate, False)
             End If
+
 
             If iTabId = PortalSettings.RegisterTabId Then
                 sOut = ConcatCssClasses(sOut, "Register", sTemplate, False)
@@ -3050,12 +3348,13 @@ Namespace FortyFingers.Dnn.SkinObjects
             If iTabId = PortalSettings.UserTabId Then
                 sOut = ConcatCssClasses(sOut, "User", sTemplate, False)
             End If
+
             If iTabId = PortalSettings.SearchTabId Then
                 sOut = ConcatCssClasses(sOut, "Search", sTemplate, False)
             End If
 
             'This is an admin or host tab
-            If PortalSettings.ActiveTab.AuthorizedRoles = "Administrators;" OR PortalSettings.ActiveTab.AuthorizedRoles = "" Then
+            If PortalSettings.ActiveTab.TabPermissions.ToString("VIEW") = "Administrators;" Or PortalSettings.ActiveTab.TabPermissions.ToString("VIEW") = "" Then
                 sOut = ConcatCssClasses(sOut, "Admin", sTemplate, False)
             End If
 
@@ -3076,15 +3375,15 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             If Regex.IsMatch(sBrowser, BrowserFilter, RegexOptions.IgnoreCase) Then
 
-                Dim iVersion As Integer = Math.Abs(GetBrowserVersion())
+                Dim iVersion As Integer = Math.Abs(CType(GetBrowserVersion(), Integer))
 
                 sOut.Append(String.Format("{0}{1}", sBrowser, iVersion.ToString))
 
 
                 If max > iVersion Then
 
-					Dim x as Integer
-				
+                    Dim x As Integer
+
                     For x = iVersion + 1 To max
 
                         sOut.Append(String.Format(" lt-{0}{1}", sBrowser, x))
@@ -3131,7 +3430,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 oLit.Text = ProcessTokens(sIn)
 
                 If Position = InjectPosition.Top Then
-                    oBody.Controls.AddAt(0, olit)
+                    oBody.Controls.AddAt(0, oLit)
                 Else
                     oBody.Controls.AddAt(oBody.Controls.Count(), oLit)
                 End If
@@ -3156,7 +3455,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             'DNN 5.2 minimum
             For Each oTab As DotNetNuke.Entities.Tabs.TabInfo In TabController.GetTabsByParent(iParentId, PortalSettings.PortalId)
-                If Navigation.CanShowTab(oTab, False, False) Then
+                If Navigation.CanShowTab(oTab, False, False) And oTab.CultureCode = PortalSettings.CultureCode Then
                     iOrder += 1
                     If oTab.TabID = TabId Then
                         Exit For
@@ -3169,10 +3468,32 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Function
 
 
+        Private Function SetCssClassCase(CssClass As String) As String
+
+            Select Case CssClassCase.ToLower
+                Case CssClassCases.lowercase.ToString.ToLower
+                    CssClass = CssClass.ToLower
+                Case CssClassCases.UPPERCASE.ToString.ToLower
+                    CssClass = CssClass.ToUpper
+                Case CssClassCases.PascalCase.ToString.ToLower
+                    CssClass = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(CssClass.ToLower)
+            End Select
+
+            Return CssClass
+
+
+        End Function
+
+
 
         Private Function CreateValidCssClass(ByVal sIn As String) As String
 
-            Return Regex.Replace(sIn, "^[^A-z]|[^A-z0-9]", "_")
+
+            sIn = SetCssClassCase(sIn)
+
+            sIn = Regex.Replace(sIn, "^[^A-z]|[^A-z0-9]", "_")
+
+            Return sIn
 
         End Function
 
@@ -3212,6 +3533,198 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
+#End Region
+
+#Region "Helper classes"
+
+        Enum PageType
+
+            Home
+            Splash
+            Login
+            Register
+            Account
+            Search
+
+        End Enum
+
+
+        Public Class PortalInfo
+
+            Private _oHome As PageInfo
+            Public ReadOnly Property Home() As PageInfo
+                Get
+                    Return GetPageByType(PageType.Home)
+                End Get
+            End Property
+
+
+            Private _oSplash As PageInfo
+            Public ReadOnly Property Splash() As PageInfo
+                Get
+                    Return GetPageByType(PageType.Splash)
+                End Get
+            End Property
+
+
+            Private _oLogin As PageInfo
+            Public ReadOnly Property Login() As PageInfo
+                Get
+                    Return GetPageByType(PageType.Login)
+                End Get
+            End Property
+
+
+            Private _oRegister As PageInfo
+            Public ReadOnly Property Register() As PageInfo
+                Get
+                    Return GetPageByType(PageType.Register)
+                End Get
+            End Property
+
+
+            Private _oAccount As PageInfo
+            Public ReadOnly Property Account() As PageInfo
+                Get
+                    Return GetPageByType(PageType.Account)
+                End Get
+            End Property
+
+
+            Private _oSearch As PageInfo
+            Public ReadOnly Property Search() As PageInfo
+                Get
+                    Return GetPageByType(PageType.Search)
+                End Get
+            End Property
+
+
+            Function GetPageByType(Type As PageType) As PageInfo
+
+                Dim PortalSettings As DotNetNuke.Entities.Portals.PortalSettings = DotNetNuke.Common.Globals.GetPortalSettings()
+
+                Dim Id As Integer = 0
+
+                Select Case Type
+
+                    Case PageType.Home
+
+                        Id = PortalSettings.HomeTabId
+
+                    Case PageType.Splash
+
+                        Id = PortalSettings.SplashTabId
+
+                    Case PageType.Login
+
+                        Id = PortalSettings.LoginTabId
+
+                    Case PageType.Register
+
+                        Id = PortalSettings.RegisterTabId
+
+                    Case PageType.Account
+
+                        Id = PortalSettings.UserTabId
+
+                    Case PageType.Search
+
+                        Id = PortalSettings.SearchTabId
+
+                End Select
+
+                Dim oPage As New PageInfo(Id)
+
+                Return (oPage)
+
+            End Function
+
+        End Class
+
+        Public Class PageInfo
+
+            ''' <summary>
+            ''' 
+            ''' </summary>
+            ''' <remarks></remarks>
+            Private _iId As Integer
+            Public Property Id() As Integer
+                Get
+                    Return _iId
+                End Get
+                Set(ByVal value As Integer)
+                    _iId = value
+                End Set
+            End Property
+
+
+            Private _strUrl As String
+            Public Property Url() As String
+                Get
+                    Return _strUrl
+                End Get
+                Set(ByVal value As String)
+                    _strUrl = value
+                End Set
+            End Property
+
+
+            Private _strName As String
+            Public Property Name() As String
+                Get
+                    Return _strName
+                End Get
+                Set(ByVal value As String)
+                    _strName = value
+                End Set
+            End Property
+
+
+            Private _strStatus As String
+            Public Property Status() As String
+                Get
+                    Return _strStatus
+                End Get
+                Set(ByVal value As String)
+                    _strStatus = value
+                End Set
+            End Property
+
+
+
+
+            Public Sub New(id As Integer)
+
+                Me.Id = id
+
+                Dim PortalSettings As DotNetNuke.Entities.Portals.PortalSettings = DotNetNuke.Common.Globals.GetPortalSettings()
+
+                Dim oTabC As New TabController
+                Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = oTabC.GetTab(id, PortalSettings.PortalId, False)
+
+                If Not oTab Is Nothing Then
+                    Try
+                        Me.Url = DotNetNuke.Common.Globals.NavigateURL(oTab.TabID)
+                        Me.Name = oTab.TabName
+
+                    Catch ex As Exception
+                        Status = "Error-Getting-Url"
+
+                    End Try
+
+                Else
+                    Status = "Error-Not-A-Valid-TabId"
+                End If
+
+                If Me.Id = -1 Then
+                    Me.Url = "#"
+                    Me.Name = "Page Not Set"
+                End If
+
+            End Sub
+
+
+        End Class
 #End Region
 
 
