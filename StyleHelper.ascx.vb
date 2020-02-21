@@ -1116,7 +1116,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private _sRedirectBaseUrl As String = String.Empty
         ''' <summary>
-        ''' The base URL for redirecting, will be used to make comparations
+        ''' The base URL for redirecting, will be used to compare
         ''' </summary>
         ''' <value></value>
         ''' <remarks></remarks>
@@ -1265,6 +1265,12 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             bConditions = CheckConditions()
 
+            If AddHtmlAttribute <> String.Empty And bConditions Then
+
+                ProcessHtmlAttributes()
+
+            End If
+
         End Sub
 
 
@@ -1340,9 +1346,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
 
-            If AddHtmlAttribute <> String.Empty And bConditions Then
-                ProcessHtmlAttributes()
-            End If
+
 
             'Non conditional Options
             If FilterBodyClass = False Or bConditions Then
@@ -1360,22 +1364,28 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
 
-
+            ' Add the doctype
             ProcessDoctype()
 
-            'Add the HTML attributes, only needed for DNN 6+
-            If CheckDnnVersion("+6") Then
-                Dim oAttributes As Literal = CType(Me.Page.FindControl("attributeList"), Literal)
-                If Not oAttributes Is Nothing Then
-                    oAttributes.Text = HtmlAttributeList()
-                End If
+
+            'Write the text to the HTML attributes literal, the manipulation of it has already been done before this on init.
+            Dim oAttributes As Literal = CType(Me.Page.FindControl("attributeList"), Literal)
+            If Not oAttributes Is Nothing Then
+                oAttributes.Text = HtmlAttributeList()
             End If
 
+            Dim sContent As String = String.Empty
+
+
             If bConditions Then
-                ltShowInfo.Text &= ProcessTokens(Content)
+                sContent = Content
             Else
-                ltShowInfo.Text &= ProcessTokens(ContentFalse)
+                sContent = ContentFalse
             End If
+
+            ltShowInfo.Text = ProcessTokens(Content)
+
+
 
             If ShowInfo = True Then WriteShowInfo()
 
@@ -1432,6 +1442,14 @@ Namespace FortyFingers.Dnn.SkinObjects
             If Not Request.Cookies(CookieName) Is Nothing Then
                 'Check if the Cookie value is correct
                 If Server.HtmlEncode(Request.Cookies(CookieName).Value) = CookieValue Then
+                    Return True
+                End If
+            End If
+
+            'Check if the Cookie Exists in Response
+            If Not Response.Cookies(CookieName) Is Nothing Then
+                'Check if the Cookie value is correct
+                If Server.HtmlEncode(Response.Cookies(CookieName).Value) = CookieValue Then
                     Return True
                 End If
             End If
@@ -1555,7 +1573,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                                 Dim oMeta As HtmlMeta = CType(oControl, HtmlMeta)
                                 'Get the parameter
                                 If Not oMeta.Attributes(oValPair.Parameter) Is Nothing Then
-                                    Dim sNewVal = oValPair.Value1
+                                    Dim sNewVal As String = oValPair.Value1
                                     'Replace * with the original value 
                                     sNewVal = sNewVal.Replace("*", oMeta.Attributes(oValPair.Parameter))
                                     'Change the Parameters Value
@@ -1578,12 +1596,8 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Sub MetaNameLowerCase()
 
-            Dim strAttr = "name"
+            Dim strAttr As String = "name"
             Dim oHead As HtmlGenericControl = CType(Me.Page.FindControl("Head"), HtmlGenericControl)
-
-
-
-
 
 
             Try
@@ -1593,7 +1607,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                         Dim oMeta As HtmlMeta = CType(oControl, HtmlMeta)
                         'Get the parameter
                         If Not oMeta.Attributes(strAttr) Is Nothing Then
-                            Dim sNewVal = oMeta.Attributes(strAttr).ToLower
+                            Dim sNewVal As String = oMeta.Attributes(strAttr).ToLower
                             'Replace * with the original value 
                             oMeta.Attributes(strAttr) = sNewVal
                         End If
@@ -1646,7 +1660,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Dim iItems As Integer = oIncludes.Controls.Count - 1
 
                 'Loop though Items reverse
-                For i = iItems To 0 Step -1
+                For i As Integer = iItems To 0 Step -1
 
                     Dim oCssControl As Control = oIncludes.Controls(i)
 
@@ -1997,13 +2011,15 @@ Namespace FortyFingers.Dnn.SkinObjects
             'Get the DNN page
             Dim oPage As CDefault = TryCast(Me.Page, CDefault)
 
+            'Are there html attributes?
             If (oPage.HtmlAttributes IsNot Nothing) AndAlso (oPage.HtmlAttributes.Count > 0) Then
-                Dim attr = New StringBuilder("")
+                Dim attr As StringBuilder = New StringBuilder("")
+                'Loop through the existing attributes
                 For Each AttributeName As String In oPage.HtmlAttributes.Keys
                     If (Not [String].IsNullOrEmpty(AttributeName)) AndAlso (oPage.HtmlAttributes(AttributeName) IsNot Nothing) Then
                         Dim attributeValue As String = oPage.HtmlAttributes(AttributeName)
                         If (attributeValue.IndexOf(",") > 0) Then
-                            Dim attributeValues = attributeValue.Split(","c)
+                            Dim attributeValues() As String = attributeValue.Split(","c)
                             For attributeCounter As Integer = 0 To attributeValues.Length - 1
                                 attr.Append((" " & AttributeName & "=""") + attributeValues(attributeCounter) & """")
                             Next
@@ -2150,14 +2166,17 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
         Private Function PathTokenReplace(ByVal Path As String) As String
-            'Replace tokens in Path
-            Path = Regex.Replace(Path, "\[S\]", PortalSettings.ActiveTab.SkinPath, RegexOptions.IgnoreCase) 'Skin Path
-            Path = Regex.Replace(Path, "\[P\]", PortalSettings.HomeDirectory, RegexOptions.IgnoreCase) 'Portal Path
-            Path = Regex.Replace(Path, "\[M\]", Me.TemplateSourceDirectory, RegexOptions.IgnoreCase) 'Skin Object Path
-            Path = Regex.Replace(Path, "\[R\]", "/") 'Root Path
-            Path = Regex.Replace(Path, "\[D\]", "/DesktopModules/") 'DesktopModules
 
+            If Path.Contains("[") Then
 
+                'Replace tokens in Path
+                Path = Regex.Replace(Path, "\[S\]", PortalSettings.ActiveTab.SkinPath, RegexOptions.IgnoreCase) 'Skin Path
+                Path = Regex.Replace(Path, "\[P\]", PortalSettings.HomeDirectory, RegexOptions.IgnoreCase) 'Portal Path
+                Path = Regex.Replace(Path, "\[M\]", Me.TemplateSourceDirectory, RegexOptions.IgnoreCase) 'Skin Object Path
+                Path = Regex.Replace(Path, "\[R\]", "/") 'Root Path
+                Path = Regex.Replace(Path, "\[D\]", "/DesktopModules/") 'DesktopModules
+
+            End If
 
             Return Path
 
@@ -2322,7 +2341,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 'Writes cookie or querystring with the value of the original page url
                 Dim BaseName As String = "RedirectedFrom"
 
-                Dim sOrignalURL = PortalSettings.ActiveTab.FullUrl
+                Dim sOrignalURL As String = PortalSettings.ActiveTab.FullUrl
 
                 'Write a cookie with the original landing page
                 If Regex.IsMatch(RedirectInfo, "Cookie", RegexOptions.IgnoreCase) Then 'Write cookie
@@ -2713,7 +2732,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
                 'Get the current username
-                Dim sUser As String = UserController.GetCurrentUserInfo().Username
+                Dim sUser As String = UserController.Instance.GetCurrentUserInfo().Username
                 Return (MatchString(sUser, sUsers))
             End If
 
@@ -2727,7 +2746,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
                 'Get the current usermode
-                Dim sUserMode = GetCpState()
+                Dim sUserMode As String = GetCpState()
 
                 Return (MatchString(sUserMode, sUserModes))
 
@@ -2761,7 +2780,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
                 'As there is no superuser role, so add it for superusers
-                If UserController.GetCurrentUserInfo.IsSuperUser Then
+                If UserController.Instance.GetCurrentUserInfo().IsSuperUser Then
                     sAllroles = CharSepStrAdd(sAllroles, "SuperUsers", "|")
                 End If
 
@@ -2792,7 +2811,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             Dim sOut As String = String.Empty
 
             'Create string with all roles for this user in it
-            For Each sRole As String In UserController.GetCurrentUserInfo().Roles
+            For Each sRole As String In UserController.Instance.GetCurrentUserInfo().Roles
                 sOut = CharSepStrAdd(sOut, sRole, "|")
             Next
 
@@ -2824,7 +2843,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
                 'If the user is not a member of any roles
-                If UserController.GetCurrentUserInfo().Roles.Length = 0 Then
+                If UserController.Instance.GetCurrentUserInfo().Roles.Length = 0 Then
                     If (PortalSettings.Current.UserInfo.IsSuperUser) Then
                         If (MatchString(PortalSettings.AdministratorRoleName, sRoles)) Then
                             Return True
@@ -2838,7 +2857,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                     'Regular Check, user in roles
                     Dim sAllroles As String = String.Empty
                     'Create string with all roles for this user in it
-                    For Each sRole As String In UserController.GetCurrentUserInfo().Roles
+                    For Each sRole As String In UserController.Instance.GetCurrentUserInfo().Roles
                         sAllroles &= sRole
                     Next
                     If (MatchString(sAllroles, sRoles)) Then
@@ -2847,7 +2866,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
                     'If SuperUsers was part of the roles list
 
-                    If UserController.GetCurrentUserInfo.IsSuperUser Then
+                    If UserController.Instance.GetCurrentUserInfo().IsSuperUser Then
                         If (MatchString(sRoles, "superuser")) Then
                             Return True
                         End If
@@ -2985,11 +3004,11 @@ Namespace FortyFingers.Dnn.SkinObjects
             sbOut.AppendLine(String.Format(s, "ASP.NET detected Browser", ShowBrowser))
             sbOut.AppendLine(String.Format(s, "ASP.NET detected Browserversion", ShowBrowserVersion))
             sbOut.AppendLine(String.Format(s, "Useragent String", Request.UserAgent))
-            sbOut.AppendLine(String.Format(s, "Current Username", UserController.GetCurrentUserInfo().Username))
+            sbOut.AppendLine(String.Format(s, "Current Username", UserController.Instance.GetCurrentUserInfo().Username))
 
             Dim sRoles As String = String.Empty
 
-            For Each sRole As String In UserController.GetCurrentUserInfo().Roles
+            For Each sRole As String In UserController.Instance.GetCurrentUserInfo().Roles
                 If Not sRole = String.Empty Then
                     sRole &= ", "
                 End If
@@ -3242,9 +3261,13 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Function
 
 
+
         Private Function ProcessTokens(ByVal sOriginal As String) As String
 
-            Return ProcessTokens(sOriginal, TextType.Text)
+
+            Dim sResult As String = ProcessTokens(sOriginal, TextType.Text)
+
+            Return sResult
 
         End Function
 
@@ -3252,143 +3275,160 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Function ProcessTokens(ByVal sOriginal As String, Type As TextType) As String
 
-            'Allow the use of all kinds of DNN attributes to be used in templates
-            'Will parse the passed string
 
-            'Portal
-            Dim strPortal As String = "[Portal"
-
-            'Is there a portal token
-            If sOriginal.Contains(strPortal) Then
-
-                'Replace PortalId
-                sOriginal = ReplaceToken(sOriginal, "[Portal:Id]", PortalSettings.PortalId.ToString, TextType.Text)
-                sOriginal = ReplaceToken(sOriginal, "[PortalId]", PortalSettings.PortalId.ToString, TextType.Text) ' Legacy
-
-                sOriginal = ReplaceToken(sOriginal, "[Portal:Alias]", PortalSettings.PortalAlias.HTTPAlias, Type)
-                sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Root]", GetParentAlias(), Type)
-                sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Protocol]", GetAliasProtocol(), Type)
-
-                sOriginal = ReplaceToken(sOriginal, "[Portal:Name]", PortalSettings.PortalName, Type)
-
-                sOriginal = ReplaceSettingsToken(sOriginal, SettingsType.Portal, Type)
-
-            End If
-
-            'Pages / Tabs
-
-            'Portal
-            Dim strPage As String = "[Page"
-
-            'Is there a portal token
-            If sOriginal.Contains(strPage) Then
-
-                'Replace Page data
-                Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = GetTabData()
-
-                sOriginal = ReplaceToken(sOriginal, "[Page:Name]", oTab.TabName, Type)
-                sOriginal = ReplaceToken(sOriginal, "[PageName]", oTab.TabName, Type) ' Legacy
-
-                sOriginal = ReplaceToken(sOriginal, "[Page:Level]", oTab.Level.ToString, TextType.Text)
-                sOriginal = ReplaceToken(sOriginal, "[PageLevel]", oTab.Level.ToString, TextType.Text) ' Legacy
-
-                sOriginal = ReplaceToken(sOriginal, "[Page:Title]", oTab.Title, Type)
-
-                sOriginal = ReplaceToken(sOriginal, "[Page:Description]", oTab.Description, Type)
-                sOriginal = ReplaceToken(sOriginal, "[Page:Url]", GetFullUrl, Type)
-                sOriginal = ReplaceToken(sOriginal, "[Page:RelativeUrl]", System.Web.HttpContext.Current.Request.RawUrl, Type)
-                sOriginal = ReplaceToken(sOriginal, "[Page:Id]", oTab.TabID.ToString, TextType.Text)
-
-                sOriginal = ReplaceToken(sOriginal, "[Page:Skin]", oTab.SkinSrc, Type)
-                sOriginal = ReplaceToken(sOriginal, "[Page:Container]", oTab.ContainerSrc, Type)
-
-                sOriginal = ReplaceToken(sOriginal, "[Page:IconFile]", oTab.IconFile, Type)
-                sOriginal = ReplaceToken(sOriginal, "[Page:IconFileLarge]", oTab.IconFileLarge, Type)
+            If sOriginal.Contains("[") Then
 
 
-                sOriginal = ReplaceSettingsToken(sOriginal, SettingsType.Tab, Type)
+                'Portal
+                Dim strPortal As String = "[Portal"
 
+                'Is there a portal token
+                If sOriginal.Contains(strPortal) Then
 
-            End If
+                    'Replace PortalId
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Id]", PortalSettings.PortalId.ToString, TextType.Text)
+                    sOriginal = ReplaceToken(sOriginal, "[PortalId]", PortalSettings.PortalId.ToString, TextType.Text) ' Legacy
 
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Alias]", PortalSettings.PortalAlias.HTTPAlias, Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Root]", GetParentAlias(), Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Protocol]", GetAliasProtocol(), Type)
 
-            sOriginal = ReplaceToken(sOriginal, "[Date]", Now().ToString("yyyyMMdd"), TextType.Text)
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Name]", PortalSettings.PortalName, Type)
 
-            'As these are calculated Values, first check if there is a match for the Token
-
-            'Get Control Panel Class
-            If MatchToken(sOriginal, "[CPState]") Then
-                sOriginal = ReplaceToken(sOriginal, "[CPState]", GetCpState, Type)
-            End If
-
-            'Get DNN Version Class, but only for unauthenticated users
-
-            If MatchToken(sOriginal, "[DnnVersion]") Then
-
-                Dim val As String = String.Empty
-
-                If Not GetCpState() = strUserModeNone Then
-
-                    val = "DNN" & CurrentDnnVersion(1)
+                    sOriginal = ReplaceSettingsToken(sOriginal, SettingsType.Portal, Type)
 
                 End If
 
-                sOriginal = ReplaceToken(sOriginal, "[DnnVersion]", val, TextType.CssClass)
+                'Pages / Tabs
+
+                'Portal
+                Dim strPage As String = "[Page"
+
+                'Is there a portal token
+                If sOriginal.Contains(strPage) Then
+
+                    'Replace Page data
+                    Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = GetTabData()
+
+                    sOriginal = ReplaceToken(sOriginal, "[Page:Name]", oTab.TabName, Type)
+                    sOriginal = ReplaceToken(sOriginal, "[PageName]", oTab.TabName, Type) ' Legacy
+
+                    sOriginal = ReplaceToken(sOriginal, "[Page:Level]", oTab.Level.ToString, TextType.Text)
+                    sOriginal = ReplaceToken(sOriginal, "[PageLevel]", oTab.Level.ToString, TextType.Text) ' Legacy
+
+                    sOriginal = ReplaceToken(sOriginal, "[Page:Title]", oTab.Title, Type)
+
+                    sOriginal = ReplaceToken(sOriginal, "[Page:Description]", oTab.Description, Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Page:Url]", GetFullUrl, Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Page:RelativeUrl]", System.Web.HttpContext.Current.Request.RawUrl, Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Page:Id]", oTab.TabID.ToString, TextType.Text)
+
+                    sOriginal = ReplaceToken(sOriginal, "[Page:Skin]", oTab.SkinSrc, Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Page:Container]", oTab.ContainerSrc, Type)
+
+                    sOriginal = ReplaceToken(sOriginal, "[Page:IconFile]", oTab.IconFile, Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Page:IconFileLarge]", oTab.IconFileLarge, Type)
+
+
+                    sOriginal = ReplaceSettingsToken(sOriginal, SettingsType.Tab, Type)
+
+
+                End If
+
+
+                sOriginal = ReplaceToken(sOriginal, "[Date]", Now().ToString("yyyyMMdd"), TextType.Text)
+
+                'As these are calculated Values, first check if there is a match for the Token
+
+                'Get Control Panel Class
+                If MatchToken(sOriginal, "[CPState]") Then
+                    sOriginal = ReplaceToken(sOriginal, "[CPState]", GetCpState, Type)
+                End If
+
+                'Get DNN Version Class, but only for unauthenticated users
+
+                If MatchToken(sOriginal, "[DnnVersion]") Then
+
+                    Dim val As String = String.Empty
+
+                    If Not GetCpState() = strUserModeNone Then
+
+                        val = "DNN" & CurrentDnnVersion(1)
+
+                    End If
+
+                    sOriginal = ReplaceToken(sOriginal, "[DnnVersion]", val, TextType.CssClass)
+
+                End If
+
+
+                'Get Culture Class
+                If MatchToken(sOriginal, "[Culture]") Then
+                    sOriginal = ReplaceToken(sOriginal, "[Culture]", CurrentCulture, Type)
+                End If
+
+
+                'Get Language Class
+                If MatchToken(sOriginal, "[Language]") Then
+                    sOriginal = ReplaceToken(sOriginal, "[Language]", CurrentLanguage, Type)
+                End If
+
+
+                'Get PageType Class
+                If MatchToken(sOriginal, "[PageType]") Then
+                    sOriginal = ReplaceToken(sOriginal, "[PageType]", GetPageType, TextType.Text)
+                End If
+
+
+                'Get Browser Class
+                If MatchToken(sOriginal, "[IE]") Then
+                    sOriginal = ReplaceToken(sOriginal, "[IE]", GetBrowserClass(12, "ie"), TextType.Text)
+                End If
+
+
+                ' Still tokens?
+                If sOriginal.Contains("[") Then
+
+                    'Replace QS Parameters
+
+                    'Get the pattern [xxx]
+                    Dim m As Match = Regex.Match(sOriginal, "\[.*:.*\]", RegexOptions.IgnoreCase)
+
+                    If Not m.Value = String.Empty Then
+
+                        'Get rid of the []
+                        Dim s As String = RemoveStartEnd(m.Value, "[", "]")
+
+                        'Split the parameter and value
+                        Dim oParamVal As New ParameterValue(s, ":")
+
+                        Select Case oParamVal.Parameter
+                            Case "QS"
+                                Dim sQS As String = GetQsValue(oParamVal.Value1)
+
+                                If sQS = String.Empty Then
+                                    'Return "" if querystring not found
+                                    sOriginal = ReplaceToken(sOriginal, m.Value, String.Empty, Type)
+                                Else
+                                    sOriginal = ReplaceToken(sOriginal, m.Value, sQS, Type)
+                                End If
+
+                        End Select
+
+                    End If
+
+                End If
+
+                'If the string still contains a [ try parsing path tokens
+                If sOriginal.Contains("[") Then
+
+                    sOriginal = PathTokenReplace(sOriginal)
+
+                End If
 
             End If
 
 
-            'Get Culture Class
-            If MatchToken(sOriginal, "[Culture]") Then
-                sOriginal = ReplaceToken(sOriginal, "[Culture]", CurrentCulture, Type)
-            End If
-
-
-            'Get Language Class
-            If MatchToken(sOriginal, "[Language]") Then
-                sOriginal = ReplaceToken(sOriginal, "[Language]", CurrentLanguage, Type)
-            End If
-
-
-            'Get PageType Class
-            If MatchToken(sOriginal, "[PageType]") Then
-                sOriginal = ReplaceToken(sOriginal, "[PageType]", GetPageType, TextType.Text)
-            End If
-
-
-            'Get Browser Class
-            If MatchToken(sOriginal, "[IE]") Then
-                sOriginal = ReplaceToken(sOriginal, "[IE]", GetBrowserClass(12, "ie"), TextType.Text)
-            End If
-
-
-            'Replace QS Parameters
-
-            'Get the pattern [xxx]
-            Dim m As Match = Regex.Match(sOriginal, "\[.*:.*\]", RegexOptions.IgnoreCase)
-
-            If Not m.Value = String.Empty Then
-
-                'Get rid of the []
-                Dim s As String = RemoveStartEnd(m.Value, "[", "]")
-
-                'Split the parameter and value
-                Dim oParamVal As New ParameterValue(s, ":")
-
-                Select Case oParamVal.Parameter
-                    Case "QS"
-                        Dim sQS As String = GetQsValue(oParamVal.Value1)
-
-                        If sQS = String.Empty Then
-                            'Return "" if querystring not found
-                            sOriginal = ReplaceToken(sOriginal, m.Value, String.Empty, Type)
-                        Else
-                            sOriginal = ReplaceToken(sOriginal, m.Value, sQS, Type)
-                        End If
-
-                End Select
-
-            End If
 
             Return (sOriginal)
 
@@ -4142,12 +4182,22 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
                 'Detect if the browser is a mobile browser
-                'The regex comes from http://detectmobilebrowser.com/
-                'Used version: "Regex updated: 30 June 2010"
+                'The regex comes from as site that's not hijacked, but you can replace the regex if you want
+
                 Dim u As String = Request.ServerVariables("HTTP_USER_AGENT")
                 Dim b As New Regex(IfMobileRX1, RegexOptions.IgnoreCase)
-                Dim v As New Regex(IfMobileRX2, RegexOptions.IgnoreCase)
-                If b.IsMatch(u) Or v.IsMatch(Left(u, 4)) Then
+				
+				'In case the second regex was set to "" also match
+				Dim bM2 as Boolean = False
+
+                If IfMobileRX2 <> "" Then
+                    Dim v As New Regex(IfMobileRX2, RegexOptions.IgnoreCase)
+                    If v.IsMatch(Left(u, 4)) Then 
+						bM2 = True
+					End If
+				End If
+
+                If b.IsMatch(u) Or bM2 Then
                     Return (bCheckFor)
                 Else
                     Return (Not bCheckFor)
