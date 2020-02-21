@@ -1,6 +1,6 @@
 <div>
     <h2>
-        40FINGERS DotNetNuke Stylehelper skin object, Version 02.07.05</h2>
+        40FINGERS DNN Stylehelper skin object, Version 02.08.06</h2>
     <img width="242" height="268" align="right" src="http://www.40fingers.net/Portals/0/Blogs/timo/StyleHelper/StyleHelperBox.png" alt="" />
     <p>
         Project Page:<br />
@@ -13,7 +13,141 @@
     <div style="clear: both;">
         &nbsp;</div>
 		
+	<h3>Version 02.08.07+:</h3>
+    <h4>Check out release notes on codeplex
+        </h4>
+
+	<h3>Version 02.08.06:</h3>
+    <h4>Added
+        </h4>
 		
+	<ul>
+        <li style="list-style-type: none;">
+		<p>
+		<b>CorrectModuleCss attribute</b><br />
+		Some module load style sheets after skin.css, while they should be loaded before.<br />
+		Although you can overwrite their styles by using a more specific selector or !important, I prefer them loading in the correct order.<br />
+		If CorrectModuleCss = true, StyleHelper will look for style sheets from the /Desktopmodules/ and /Admin/ folder and move them to position before skin.css.<br />
+		(Only for style sheets loaded through Client Resource Management)
+		<p>
+		Example: &lt;fortyfingers:STYLEHELPER ID=&quot;SH1&quot; CorrectModuleCss=&quot;Trueg&quot; runat=&quot;server&quot; /&gt;
+		</li>
+        <li style="list-style-type: none;">
+		<p>
+		<b>AddAfterBody attribute</b> <br />
+		This will render the passed string after the Body tag, before the From tag.<br />
+		In some cases Google analytics needs code to be injected between Body and Form tag.
+		<p>
+		Example: &lt;fortyfingers:STYLEHELPER ID=&quot;SH1&quot; AddAfterBody=&quot;Injected after the Body tag&quot; runat=&quot;server&quot; /&gt;
+		</li>
+	</ul>
+	
+	<h3>Version 02.08.05:</h3>
+    <h4>Added
+        </h4>
+		
+	<ul>
+        <li style="list-style-type: none;">
+		<p>
+		BodyClass token: [CPState]. <br />
+		This will render "View, Edit or Layout" depending on the state of the controlpanel.<br />
+		Default in BodyClass attribute = "CP-[CPState]", rendering:<br />
+		CP-None, CP-View, CP-Edit or CP-Layout.		
+		<p>
+		</li>
+	</ul>
+	
+	<h3>Version 02.08.04:</h3>
+    <h4>Fixed
+        </h4>
+		
+	<ul>
+        <li style="list-style-type: none;">
+		<p>
+		Fallback for setting unsupported doctype: do nothing :-)
+		<p>
+		</li>
+	</ul>
+	
+		<h3>Version 02.08.03:</h3>
+    <h4>Fixed
+        </h4>
+		
+	<ul>
+        <li style="list-style-type: none;">
+		<p>
+		Redirect: Some minor RedirectStop issues
+		<p>
+		</li>
+	</ul>
+	
+<h3>Version 02.08.02:</h3>
+    <h4>Added
+        </h4>
+		
+	<ul>
+        <li style="list-style-type: none;">
+		<p>
+		<b>Page Type Body Class</b><br />
+		<p>When you add this to the BodyClass Attribute: [PageType]<br />
+		The Body element on the page will get a class indicating if this is the Home, Splash, Login page etc.<br />
+		The injected class will be like this:  "PageType_xxx" <br />
+		Where "xxx" can be replaced by "Home", "Splash", "Login", "Register", "User", "Search" or "Normal" depending on the Site Settings.
+		</p>
+		Example: &lt;fortyfingers:STYLEHELPER id=&quot;SH1&quot; BodyClass=&quot;[PageType]&quot; runat=&quot;server&quot; /&gt;
+		</li>
+	</ul>
+		
+<h3>Version 02.08.01:</h3>
+    <h4>Added
+        </h4>
+		
+	<ul>
+        <li style="list-style-type: none;">
+            <p>
+			<b>Remove Javascript files</b><br />
+			The new "RemoveJsFile" attribute allows you to remove JS files that have been injected using DNN Client Resource Mangement (CRM).<br />
+			This version will only remove DNN's JS files, not the ones injected by Modules!<br />
+			In short; when a JS link in the HEAD of the page looks like this: <b>..../file.js<i>?cdv=xx</i></b> you can remove it.<br />
+			(Don't include the ?cdv=xx" part when referencing a file for removal)<br />
+			</p>
+			<p>
+			Example: &lt;fortyfingers:STYLEHELPER ID=&quot;SH1&quot; RemoveJsFile=&quot;/jquery-ui.min.js&quot; runat=&quot;server&quot; /&gt;<br />
+			Will remove jQuery UI from the page.<br />
+			Remove multiple items using a comma separated list<br />
+            </p>
+        </li>
+		<li style="list-style-type: none;">
+		<b>Redirect user without page rights</b><br />
+		<i>Attribute: IfNoViewRights</i>
+		<p>
+		This can be used to redirect Users that don't have view rights on a page.<br />
+		I used this to give logged in users a better explanation than the standard DNN message.<br />
+		Should be used in combination with the RedirectTo attribute for the redirect URL.<br />
+		Ignores the redirectmode attribute as the redirect needs to be done before DNN processes the page.
+		</p>
+		<p>
+		Example: &lt;fortyfingers:STYLEHELPER ID=&quot;SH1&quot; IfNoViewRights=&quot;true&quot; RedirectTo=&quot;/NoViewRights.aspx&quot; runat=&quot;server&quot; /&gt;<br />
+		Redirect users without view rights to a page (using this skin) to the "/NoViewRights.aspx" page.
+		</li>
+	</ul>
+	
+	
+<h3>Version 02.08.00:</h3>
+    <h4>Added
+        </h4>
+		
+	<ul>
+        <li style="list-style-type: none;">
+            <p>
+			<b>Remove Control</b><br />
+			This will hide the control based on its server id (the ID in the ascx file).<br />
+			Can be used to remove for instance a pane, based on one of the conditions. RemoveControl="RightPane" will remove the RightPane from the page source.<br />
+			Multiple ID's can be passed like this: RemoveControl="BottomPane||RightPane"<br />
+            </p>
+        </li>
+	</ul>
+	
 <h3>Version 02.07.06:</h3>
     <h4>Corrected
         </h4>

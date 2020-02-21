@@ -24,8 +24,13 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Const _sNOT As String = "!"
 
-        'Check if the conditions are met to process the files
+        'Check if the conditions are met to proceed
         Dim bConditions As Boolean
+
+        Enum InjectPosition
+            Top = 0
+            Bottom = 1
+        End Enum
 
 #End Region
 
@@ -196,6 +201,25 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
+        Private _sRemoveJsFile As String = String.Empty
+        ''' <summary>
+        ''' Comma seperated list of JS files to remove from the Page (only the ones added via DNN are supported)
+        ''' </summary>
+        ''' <value>Empty</value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property RemoveJsFile() As String
+            Set(ByVal Value As String)
+                _sRemoveJsFile = Value
+            End Set
+            Get
+                Return _sRemoveJsFile
+            End Get
+
+        End Property
+
+
+
         Private _bFilterAdd As Boolean = True
         ''' <summary>
         ''' Set if the adding should be conditional
@@ -290,6 +314,24 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Property
 
 
+        Private _bCorrectModuleCss As Boolean
+        ''' <summary>
+        ''' Correct Module.css load order
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property CorrectModuleCss() As Boolean
+            Get
+                Return _bCorrectModuleCss
+            End Get
+            Set(ByVal value As Boolean)
+                _bCorrectModuleCss = value
+            End Set
+        End Property
+
+
+
 
         Private _sCssMedia As String = "screen"
         ''' <summary>
@@ -347,6 +389,60 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Property
 
 
+        ''' <summary>
+        ''' Legacy: replace with AddToBodyTop
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property AddAfterBody() As String
+            Get
+                Return AddToBodyTop
+            End Get
+            Set(ByVal value As String)
+                AddToBodyTop = value
+            End Set
+        End Property
+
+
+
+        Private _sAddToBodyTop As String
+        ''' <summary>
+        ''' Add at the top of the body element
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property AddToBodyTop() As String
+            Get
+                Return _sAddToBodyTop
+            End Get
+            Set(ByVal value As String)
+                _sAddToBodyTop = value
+            End Set
+        End Property
+
+        Private _sAddToBodyBottom As String
+        ''' <summary>
+        ''' Add at the bottom of the body element
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property AddToBodyBottom() As String
+            Get
+                Return _sAddToBodyBottom
+            End Get
+            Set(ByVal value As String)
+                _sAddToBodyBottom = value
+            End Set
+        End Property
+
+
+
+
+
+
         Dim _bFilterBodyClass As Boolean = False
         ''' <summary>
         ''' Filter adding the body class or not?
@@ -366,7 +462,9 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Dim _sBodyClass As String = "[BcName] [BcId] [BcNr] [UserPageRoles] Cult-[Culture] Lang-[Language]"
+
+        Dim _sBodyClass As String = "Page-[PageName] Level-[PageLevel] [BcName] [BcId] [BcNr] CP-[CPState] [PageType] [UserPageRoles] Cult-[Culture] Lang-[Language] [IE]"
+
         ''' <summary>
         ''' Template for the page class
         ''' </summary>
@@ -460,6 +558,25 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
+        Private _sSplitChar As String = "||"
+        ''' <summary>
+        ''' Character(s) to use to pass lists
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property SplitChar() As String
+            Get
+                Return _sSplitChar
+            End Get
+            Set(ByVal value As String)
+                _sSplitChar = value
+            End Set
+        End Property
+
+
+
+
 
 
 #End Region
@@ -526,6 +643,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return _sIfUserAgentString
             End Get
         End Property
+
 
 
         ''' <summary>
@@ -600,6 +718,26 @@ Namespace FortyFingers.Dnn.SkinObjects
             End Set
             Get
                 Return _sIfRole
+            End Get
+        End Property
+
+
+
+
+        Private _bNoViewRights As Boolean = False
+        ''' <summary>
+        ''' When the user does not have view rights to the page. Can be used to redirect them to another page...
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property IfNoViewRights() As Boolean
+            '
+            Set(ByVal value As Boolean)
+                _bNoViewRights = value
+            End Set
+            Get
+                Return _bNoViewRights
             End Get
         End Property
 
@@ -966,6 +1104,24 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Protected Sub Page_Init(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Init
 
+            ' If the user has no view rights on this page, redirect them.
+            ' This is done here because it must be done before DNN redirects the user
+            ' The redirectmode is ignored for this (no cookie can be written)
+            If IfNoViewRights Then
+                If Not DotNetNuke.Security.Permissions.TabPermissionController.CanViewPage() Then
+                    Redirect()
+                End If
+            End If
+
+            If AddToBodyTop > String.Empty Then
+                ProcessAddToBody(AddToBodyTop, InjectPosition.Top)
+            End If
+
+            If AddToBodyBottom > String.Empty Then
+                ProcessAddToBody(AddToBodyBottom, InjectPosition.Bottom)
+            End If
+
+
             bConditions = CheckConditions()
 
         End Sub
@@ -984,14 +1140,21 @@ Namespace FortyFingers.Dnn.SkinObjects
                 ProcessRemoveFromHead()
             End If
 
-            If Not RemoveCssFile = String.Empty Then
+            If CorrectModuleCss Then
+                GoCorrectModuleCss()
+            End If
+
+            If Not RemoveCssFile = String.Empty Or Not RemoveJsFile = String.Empty Then
                 If FilterRemove = False Or bConditions Then
                     ProcessRemoveFiles()
                 End If
             End If
 
 
-            ProcessRemoveControls()
+            If bConditions Then
+                ProcessRemoveControls()
+            End If
+
 
             If Not RemoveMeta = String.Empty Then
                 If FilterRemove = False Or bConditions Then
@@ -1049,126 +1212,15 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
             If bConditions Then
-                ltShowInfo.Text &= Content
+                ltShowInfo.Text &= ProcessTokens(Content)
             Else
-                ltShowInfo.Text &= ContentFalse
+                ltShowInfo.Text &= ProcessTokens(ContentFalse)
             End If
-
 
             If ShowInfo = True Then WriteShowInfo()
 
         End Sub
 
-
-
-        Private Sub ProcessRedirect()       'Process redirect
-
-            'Check first if the redirection should be stopped.
-            Dim bStopRedirect As Boolean = StopRedirect()
-
-            Select Case RedirectMode.ToLower
-
-                Case "never" 'Don't redirect, allows disabeling redirect for testing..
-                    Exit Sub
-
-                Case "once" 'Redirect once (cookie valid for one year)
-
-                    'Check if the redirect was refused before
-                    If Not CheckCookie(CreateCookieName(String.Format("RefuseRedirect.{0}.Once", RedirectName)), "True") Then
-                        If bStopRedirect Then
-                            CreateCookie(CreateCookieName(String.Format("RefuseRedirect.{0}.Once", RedirectName)), "True", 365)
-                        Else
-                            Redirect()
-                        End If
-
-                    End If
-
-                Case "session", "oncepersession" 'Redirect once this session but also redirect the next session..
-
-                    'Check if the redirect was refused before
-                    If Not CheckCookie(CreateCookieName(String.Format("RefuseRedirect.{0}.Session", RedirectName)), "True") Then
-                        If bStopRedirect Then
-                            CreateCookie(CreateCookieName(String.Format("RefuseRedirect.{0}.Session", RedirectName)), "True", 0)
-                        Else
-                            Redirect()
-                        End If
-
-                    End If
-
-                Case "always"
-                    If bStopRedirect Then
-                        Redirect()
-                    End If
-            End Select
-
-        End Sub
-
-
-
-        Private Sub Redirect()
-            'Do the actual redirect
-            Dim RedirectURL As String = RedirectTo
-
-            If RedirectInfo <> String.Empty Then
-                'Writes cookie or querystring with the value of the original page url
-                Dim BaseName As String = "RedirectedFrom"
-
-                Dim sOrignalURL = PortalSettings.ActiveTab.FullUrl
-
-                'Write a cookie with the original landing page
-                If Regex.IsMatch(RedirectInfo, "Cookie", RegexOptions.IgnoreCase) Then 'Write cookie
-                    Dim CookieName As String = CreateCookieName(BaseName)
-                    Response.Cookies(CookieName).Value = sOrignalURL
-                End If
-
-                If Regex.IsMatch(RedirectInfo, "QS", RegexOptions.IgnoreCase) Then 'Add to querystring
-                    RedirectURL = AddQueryString(RedirectTo, String.Format("{0}={1}", BaseName, HttpUtility.UrlEncode(sOrignalURL)))
-                End If
-
-            End If
-
-            Response.Redirect(GetRedirectUrl(RedirectURL))
-
-        End Sub
-
-
-
-        Private Function GetRedirectUrl(ByVal URL As String) As String
-            'Input: the new URL template
-            'Example: m.test.com?[QS:DetailId]
-
-            'Get the complete URL
-            URL = ProcessPath(RedirectBaseUrl, URL)
-
-            'Get the passed tokens in the new URL
-            Dim sUrlTemp As String = URL
-
-            For Each m As Match In Regex.Matches(sUrlTemp, "\[(.*)\]")
-
-                'Remove found token
-                URL = Regex.Replace(URL, Regex.Escape(m.Value), "")
-
-                'Get parameter and value to test for
-                Dim myPV As New ParameterValue(m.Groups(1).Value, ":")
-
-                Dim sQsPm As String = String.Empty
-
-                If myPV.Parameter = "QS" Then
-                    'Get the QS parameter from the original URL
-                    sQsPm = GetQsValue(myPV.Value1)
-                End If
-
-                'Test if the value was found...
-                If Not sQsPm = String.Empty Then
-                    'Add qs parameter
-                    URL = AddQueryString(URL, myPV.Value1 & "=" & sQsPm)
-                End If
-
-            Next
-
-            Return (URL)
-
-        End Function
 
 
 
@@ -1184,64 +1236,27 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Private Function StopRedirect() As Boolean
-            'Check if you should stop redirecting (set with the RedirectStop attribute)
-
-            If RedirectStop.ToLower.Contains("never") Then Return False
-
-            'Is this page was redirected before, redirect will find out if this is a revisit
-            If RedirectStop.ToLower.Contains("revisit") Then Return True
-
-            'If a querystring parameter was passed
-            If RedirectStop.ToLower.Contains("querystring") Then
-                'Check for QS parameter
-                If CheckQueryString("NoRedirect:True") Then
-                    Return True
-                End If
-            End If
-
-            'If the referer is the redirect url 
-            If RedirectStop.ToLower.Contains("redirecturl") Then
-
-                'Get the Referrer URL
-                Dim sReferrer As String = String.Empty
-                If Not Request.UrlReferrer Is Nothing Then 'Check if there was a referrer
-                    sReferrer = Request.UrlReferrer.GetLeftPart(UriPartial.Path)
-                End If
-
-                If RedirectStop.ToLower.Contains("baseredirecturl") Then
-                    'Check the referer against the passed referer Base URL (passed in Skin)
-                    If RedirectBaseUrl > String.Empty AndAlso sReferrer.StartsWith(RedirectBaseUrl) Then
-                        Return True
-                    End If
-                Else
-                    'Test if the referring page is the page to redirect to
-                    If sReferrer = RedirectTo Or sReferrer.EndsWith(RedirectTo) Then
-                        Return True
-                    End If
-                End If
-
-            End If
-
-            Return False
-
-
-        End Function
 
 
 
         Private Function GetCpState() As String
 
-            Select Case PortalSettings.UserMode
-                Case Entities.Portals.PortalSettings.Mode.Edit
-                    Return "Edit"
-                Case Entities.Portals.PortalSettings.Mode.View
-                    Return ("View")
-                Case Entities.Portals.PortalSettings.Mode.Layout
-                    Return "Layout"
-            End Select
+            If DotNetNuke.Security.Permissions.TabPermissionController.CanAddContentToPage Or DotNetNuke.Security.Permissions.TabPermissionController.CanManagePage Then
+                Select Case PortalSettings.UserMode
+                    Case Entities.Portals.PortalSettings.Mode.View
 
-            Return ("")
+                        Return "View"
+
+                    Case Entities.Portals.PortalSettings.Mode.Edit
+                        Return "Edit"
+
+                    Case Entities.Portals.PortalSettings.Mode.Layout
+                        Return "Layout"
+
+                End Select
+            End If
+
+            Return ("None")
 
         End Function
 
@@ -1298,6 +1313,14 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             End If
 
+            If Not RemoveJsFile.Trim = String.Empty Then
+
+                For Each s As String In SplitString(RemoveJsFile, ",")
+                    UnloadJs(s.Trim)
+                Next
+
+            End If
+
         End Sub
 
 
@@ -1306,7 +1329,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             If Not RemoveControls.Trim = String.Empty Then
 
-                For Each s As String In SplitString(RemoveControls, ",")
+                For Each s As String In SplitString(RemoveControls, SplitChar)
                     RemoveControl(s.Trim)
                 Next
 
@@ -1455,6 +1478,81 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Sub
 
 
+        ''' <summary>
+        ''' Make sure all css is loaded before skin.css, will work only for css injected through Client Resource Management
+        ''' </summary>
+        ''' <remarks></remarks>
+        Private Sub GoCorrectModuleCss()
+
+            'Get the CRM control
+            Dim oIncludes As Control = Me.Page.FindControl("ClientResourceIncludes")
+            If Not oIncludes Is Nothing Then
+
+                'Get list of child items client resource controls
+                Dim CssControls As New List(Of Control)
+
+                'Loop though Items
+                For Each oCssControl As Control In oIncludes.Controls()
+                    'Check if it's a CssInclude
+                    Select Case oCssControl.GetType.ToString
+                        Case "DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude"
+                            Dim oCssItem As DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude = CType(oCssControl, DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude)
+                            'Check the path
+                            If Regex.IsMatch(oCssItem.FilePath, "/Desktopmodules/|/admin/", RegexOptions.IgnoreCase) Then
+                                'Add to the list of controls to remove
+                                oCssItem.Priority = 11
+                            End If
+
+                    End Select
+                Next
+
+            End If
+
+        End Sub
+
+
+
+        Private Sub UnloadJs(ByVal sFileName As String)
+
+
+            'For Dnn 6.1+
+            Dim oIncludes As Control = Me.Page.FindControl("ClientResourceIncludes")
+            If Not oIncludes Is Nothing Then
+
+                'Get list of child items client resource controls
+                Dim lstControl2Remove As New List(Of Control)
+
+                'Loop though Items
+                For Each oJsControl As Control In oIncludes.Controls()
+                    'Check if it's a JsInclude
+                    Dim sType As String = oJsControl.GetType.ToString
+
+                    Select Case sType
+                        Case "DotNetNuke.Web.Client.ClientResourceManagement.DnnJsInclude"
+                            Dim oJsRemove As DotNetNuke.Web.Client.ClientResourceManagement.DnnJsInclude = CType(oJsControl, DotNetNuke.Web.Client.ClientResourceManagement.DnnJsInclude)
+                            'Check the path
+                            If CheckStringFound(oJsRemove.FilePath, sFileName) Then
+                                'Add to the list of controls to remove
+                                lstControl2Remove.Add(oJsControl)
+                            End If
+
+                    End Select
+                Next
+
+                'Loop through found controls and remove them
+                For Each oJs2remove As Control In lstControl2Remove
+
+                    oIncludes.Controls.Remove(oJs2remove)
+
+                Next
+
+            End If
+
+
+
+        End Sub
+
+
 
 
         Private Sub ProcessMetaTags()   'Process meta tags to add to the head
@@ -1555,7 +1653,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Sub Add2Head(ByVal sIn As String)
             'Write a string to the head of the page
-            sIn = PathTokeReplace(sIn)
+            sIn = PathTokenReplace(sIn)
 
             'Get the head element
             Dim oHead As HtmlGenericControl = Me.Page.FindControl("Head")
@@ -1700,7 +1798,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Dim liDoctype As Literal = CType(Me.Page.FindControl("skinDocType"), Literal)
 
                 If Not liDoctype Is Nothing Then
-                    If StringContains(Doctype, "HTML 5") Then 'HTML 5
+                    If StringContains(Doctype, "HTML 5|html5") Then 'HTML 5
                         liDoctype.Text = "<!DOCTYPE HTML>"
                     ElseIf StringContains(Doctype, "XHTML") Then 'XHTML
 
@@ -1719,7 +1817,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                         liDoctype.Text = "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01//EN' 'http://www.w3.org/TR/html4/strict.dtd'>"
 
                     Else
-                        liDoctype.Text = "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN' 'http://www.w3.org/TR/html4/loose.dtd'>"
+                        'Do nothing..
                     End If
                 End If
             End If
@@ -1775,13 +1873,33 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Sub RemoveControl(ByVal id As String)
             'Set a controls visibilty to false
+            Dim oForm As Control = Me.Page.FindControl("Form")
 
-            Dim oControl As Control = Me.Page.FindControl(id)
-            If Not oControl Is Nothing Then
-                oControl.Visible = False
+            DisableControlRecursive(oForm, id)
 
-            End If
+        End Sub
 
+
+
+        Public Sub DisableControlRecursive(C As Control, ID As String)
+            ' Recursively look for control to remove
+
+            For Each childControl As Control In C.Controls
+
+                Dim sID As String = childControl.ID
+
+                If Not sID Is Nothing Then
+                    If sID.ToLower = ID.ToLower Then
+                        childControl.Visible = False
+                        Exit Sub
+                    Else
+                        DisableControlRecursive(childControl, ID)
+                    End If
+                Else
+                    DisableControlRecursive(childControl, ID)
+                End If
+
+            Next
         End Sub
 
 
@@ -1789,10 +1907,10 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Function ProcessPath(ByVal BasePath As String, ByVal Path As String) As String
 
             'Check if the subpath is not a absolute URI and there is no root token in the base path.
-            If Not (Path.Contains("://") Or Regex.IsMatch(Path, "\[.\]", RegexOptions.IgnoreCase)) Then
-                Path = CombinePath(PathTokeReplace(BasePath), Path)
+            If Not (Regex.IsMatch(Path, "\[.\]", RegexOptions.IgnoreCase) OrElse Path.Contains("://") OrElse Path.StartsWith("//")) Then
+                Path = CombinePath(PathTokenReplace(BasePath), Path)
             Else
-                Path = PathTokeReplace(Path)
+                Path = PathTokenReplace(Path)
             End If
 
             Return Path
@@ -1800,13 +1918,15 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Function
 
 
-        Private Function PathTokeReplace(ByVal Path As String) As String
+        Private Function PathTokenReplace(ByVal Path As String) As String
             'Replace tokens in Path
             Path = Regex.Replace(Path, "\[S\]", PortalSettings.ActiveTab.SkinPath, RegexOptions.IgnoreCase) 'Skin Path
             Path = Regex.Replace(Path, "\[P\]", PortalSettings.HomeDirectory, RegexOptions.IgnoreCase) 'Portal Path
             Path = Regex.Replace(Path, "\[M\]", Me.TemplateSourceDirectory, RegexOptions.IgnoreCase) 'Skin Object Path
             Path = Regex.Replace(Path, "\[R\]", "/") 'Root Path
             Path = Regex.Replace(Path, "\[D\]", "/DesktopModules/") 'DesktopModules
+
+
 
             Return Path
 
@@ -1848,6 +1968,186 @@ Namespace FortyFingers.Dnn.SkinObjects
             CheckCookies(IfCookie)
 
         End Function
+
+
+#End Region
+
+
+
+#Region "Redirects"
+
+
+
+        Private Sub ProcessRedirect()       'Process redirect
+
+            'Check first if the redirection should be stopped.
+            Dim iStopRedirect As Integer = StopRedirect()
+
+            Dim sCookieName As String = CreateCookieName(String.Format("RedirectStop.{0}.{1}.{2}", RedirectStop, RedirectMode, RedirectName))
+
+
+            Select Case RedirectMode.ToLower
+
+
+
+                Case "never" 'Don't redirect, allows disabeling redirect for testing..
+                    Exit Sub
+
+                Case "once" 'Redirect once (cookie valid for one year)
+
+                    'Check if the redirect was refused before
+                    If Not CheckCookie(sCookieName, "True") Then
+                        Select Case iStopRedirect
+                            Case 0
+                                Redirect()
+                            Case 1
+                                CreateCookie(sCookieName, "True", 365)
+                            Case 2
+                                CreateCookie(sCookieName, "True", 365)
+                                Redirect()
+                        End Select
+                    End If
+
+                Case "session", "oncepersession" 'Redirect once this session but also redirect the next session..
+
+                    'Check if the redirect was refused before
+                    If Not CheckCookie(sCookieName, "True") Then
+                        Select Case iStopRedirect
+                            Case 0
+                                Redirect()
+                            Case 1
+                                CreateCookie(sCookieName, "True", 0)
+                            Case 2
+                                CreateCookie(sCookieName, "True", 0)
+                                Redirect()
+                        End Select
+
+                    End If
+
+                Case "always"
+                    If iStopRedirect = 0 Then
+                        Redirect()
+                    End If
+            End Select
+
+        End Sub
+
+
+        Private Function StopRedirect() As Integer
+            'Check if you should stop redirecting (set with the RedirectStop attribute)
+            '0 = don't stop
+            '1 = Stop now
+            '2 = Stop next time
+
+            If RedirectStop.ToLower.Contains("never") Then Return 0
+
+            'Is this page was redirected before, redirect will find out if this is a revisit
+            If RedirectStop.ToLower.Contains("revisit") Then Return 2
+
+            'If a querystring parameter was passed
+            If RedirectStop.ToLower.Contains("querystring") Then
+                'Check for QS parameter
+                If CheckQueryString("NoRedirect:True") Then
+                    Return 1
+                End If
+            End If
+
+            'If the referer is the redirect url 
+            If RedirectStop.ToLower.Contains("redirecturl") Then
+
+                'Get the Referrer URL
+                Dim sReferrer As String = String.Empty
+                If Not Request.UrlReferrer Is Nothing Then 'Check if there was a referrer
+                    sReferrer = Request.UrlReferrer.GetLeftPart(UriPartial.Path)
+                End If
+
+                If RedirectStop.ToLower.Contains("baseredirecturl") Then
+                    'Check the referer against the passed referer Base URL (passed in Skin)
+                    If RedirectBaseUrl > String.Empty AndAlso sReferrer.StartsWith(RedirectBaseUrl) Then
+                        Return 1
+                    End If
+                Else
+                    'Test if the referring page is the page to redirect to
+                    If sReferrer = RedirectTo Or sReferrer.EndsWith(RedirectTo) Then
+                        Return 1
+                    End If
+                End If
+
+            End If
+
+            Return 0
+
+
+        End Function
+
+
+
+        Private Sub Redirect()
+            'Do the actual redirect
+            Dim RedirectURL As String = RedirectTo
+
+            If RedirectInfo <> String.Empty Then
+                'Writes cookie or querystring with the value of the original page url
+                Dim BaseName As String = "RedirectedFrom"
+
+                Dim sOrignalURL = PortalSettings.ActiveTab.FullUrl
+
+                'Write a cookie with the original landing page
+                If Regex.IsMatch(RedirectInfo, "Cookie", RegexOptions.IgnoreCase) Then 'Write cookie
+                    Dim CookieName As String = CreateCookieName(BaseName)
+                    Response.Cookies(CookieName).Value = sOrignalURL
+                End If
+
+                'Add redirect ot QueryString
+                If Regex.IsMatch(RedirectInfo, "QS", RegexOptions.IgnoreCase) Then 'Add to querystring
+                    RedirectURL = AddQueryString(RedirectTo, String.Format("{0}={1}", BaseName, HttpUtility.UrlEncode(sOrignalURL)))
+                End If
+
+            End If
+
+            Response.Redirect(GetRedirectUrl(RedirectURL))
+
+        End Sub
+
+
+
+        Private Function GetRedirectUrl(ByVal URL As String) As String
+            'Input: the new URL template
+            'Example: m.test.com?[QS:DetailId]
+
+            'Get the complete URL
+            URL = ProcessPath(RedirectBaseUrl, URL)
+
+            'Get the passed tokens in the new URL
+            Dim sUrlTemp As String = URL
+
+            For Each m As Match In Regex.Matches(sUrlTemp, "\[(.*)\]")
+
+                'Remove found token
+                URL = Regex.Replace(URL, Regex.Escape(m.Value), "")
+
+                'Get parameter and value to test for
+                Dim myPV As New ParameterValue(m.Groups(1).Value, ":")
+
+                Dim sQsPm As String = String.Empty
+
+                If myPV.Parameter = "QS" Then
+                    'Get the QS parameter from the original URL
+                    sQsPm = GetQsValue(myPV.Value1)
+                End If
+
+                'Test if the value was found...
+                If Not sQsPm = String.Empty Then
+                    'Add qs parameter
+                    URL = AddQueryString(URL, myPV.Value1 & "=" & sQsPm)
+                End If
+
+            Next
+
+            Return (URL)
+
+        End Function
+
 
 
 #End Region
@@ -2161,8 +2461,9 @@ Namespace FortyFingers.Dnn.SkinObjects
             If sUrls = String.Empty Then
                 Return True
             Else
-                'Get the current username
-                Dim sUrl As String = PortalSettings.ActiveTab.FullUrl
+                'Get the current URL
+                Dim sUrl As String = GetFullUrl()
+
 
                 Return (MatchString(sUrl, sUrls))
 
@@ -2284,7 +2585,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             Dim sOut As String = Request.Browser.Browser.ToLower
             'Correct change of returned browser for IE 11
             If sOut = "internetexplorer" Then sOut = "ie"
-			If sOut = "internet explorer" Then sOut = "ie"
+            If sOut = "internet explorer" Then sOut = "ie"
             Return sOut
 
         End Function
@@ -2428,6 +2729,9 @@ Namespace FortyFingers.Dnn.SkinObjects
                 'Check if the string contains an invert
                 Dim bInvert As Boolean = CheckInvert(s)
 
+                'Escape the string for regex
+                s = Regex.Escape(s)
+
                 'Check if the passed value is found
                 Dim bFound As Boolean = Regex.IsMatch(sTest, s, RegexOptions.IgnoreCase)
 
@@ -2505,6 +2809,25 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             'Replace PortalId
             sOriginal = Regex.Replace(sOriginal, "\[PortalId\]", PortalSettings.PortalId.ToString, RegexOptions.IgnoreCase)
+            sOriginal = Regex.Replace(sOriginal, "\[Portal:Id\]", PortalSettings.PortalId.ToString, RegexOptions.IgnoreCase)
+            sOriginal = Regex.Replace(sOriginal, "\[Portal:Alias\]", PortalSettings.PortalAlias.HTTPAlias, RegexOptions.IgnoreCase)
+
+            'Replace Page data
+            Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = GetTabData()
+
+
+            sOriginal = Regex.Replace(sOriginal, "\[Page:Name\]", oTab.TabName, RegexOptions.IgnoreCase)
+            sOriginal = Regex.Replace(sOriginal, "\[Page:Title\]", oTab.Title, RegexOptions.IgnoreCase)
+            sOriginal = Regex.Replace(sOriginal, "\[Page:Description\]", oTab.Description, RegexOptions.IgnoreCase)
+            sOriginal = Regex.Replace(sOriginal, "\[Page:Url\]", GetFullUrl, RegexOptions.IgnoreCase)
+            sOriginal = Regex.Replace(sOriginal, "\[Page:RelativeUrl\]", System.Web.HttpContext.Current.Request.RawUrl, RegexOptions.IgnoreCase)
+            sOriginal = Regex.Replace(sOriginal, "\[Page:Id\]", oTab.TabID.ToString, RegexOptions.IgnoreCase)
+
+            sOriginal = Regex.Replace(sOriginal, "\[Page:Skin\]", oTab.SkinSrc, RegexOptions.IgnoreCase)
+            sOriginal = Regex.Replace(sOriginal, "\[Page:Container\]", oTab.ContainerSrc, RegexOptions.IgnoreCase)
+
+
+            'Replace QS Parameters
 
             'Get the pattern [xxx]
             Dim m As Match = Regex.Match(sOriginal, "\[.*:.*\]", RegexOptions.IgnoreCase)
@@ -2540,14 +2863,56 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 #End Region
 
+        Function GetTabData() As DotNetNuke.Entities.Tabs.TabInfo
+
+            Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = PortalSettings.ActiveTab
+
+            If oTab.Title = "" Then oTab.Title = oTab.TabName
+            If oTab.Description = "" Then oTab.Description = oTab.Title
+
+            Return oTab
+
+        End Function
+
+        Function GetFullUrl() As String
+
+            'Correct for Child portals
+            Dim strProtocol As String = HttpContext.Current.Request.Url.Scheme
+            Dim strAlias As String = HttpContext.Current.Request.Url.Host
+            Dim strUrl As String = HttpContext.Current.Request.RawUrl
+
+            Dim strUri As String = String.Format("{0}://{1}{2}", strProtocol, strAlias, strUrl)
+
+            Return strUri
+
+
+        End Function
+
 
 #Region "PageClasses"
 
         Private Sub ProcessPageClassTemplate(ByVal Template As String)
+
             'Process the template for the body CSS class
             Dim sOut As String = String.Empty
 
             Dim oTab As DotNetNuke.Entities.Tabs.TabInfo
+
+
+            'Add Current Page Name as Class
+            If Regex.IsMatch(Template, "\[PageName\]", RegexOptions.IgnoreCase) Then
+
+                sOut = CreateValidCssClass(PortalSettings.ActiveTab.TabName)
+                Template = Regex.Replace(Template, "\[PageName\]", sOut, RegexOptions.IgnoreCase)
+            End If
+
+            'Add Current Level as Class
+            If Regex.IsMatch(Template, "\[PageLevel\]", RegexOptions.IgnoreCase) Then
+
+                Template = Regex.Replace(Template, "\[PageLevel\]", PortalSettings.ActiveTab.Level.ToString, RegexOptions.IgnoreCase)
+            End If
+
+            sOut = String.Empty
 
             'Get Bc Name Class
             If Regex.IsMatch(Template, "\[BcName\]", RegexOptions.IgnoreCase) Then
@@ -2556,6 +2921,8 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Next
                 Template = Regex.Replace(Template, "\[BcName\]", sOut, RegexOptions.IgnoreCase)
             End If
+
+
 
             sOut = String.Empty
 
@@ -2591,6 +2958,11 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Template = Regex.Replace(Template, "\[UserPageRoles\]", GetUserPageRolesClass, RegexOptions.IgnoreCase)
             End If
 
+            'Get Bc Role Class
+            If Regex.IsMatch(Template, "\[CPState\]", RegexOptions.IgnoreCase) Then
+                Template = Regex.Replace(Template, "\[CPState\]", GetCpState, RegexOptions.IgnoreCase)
+            End If
+
 
             'Get Culture Class
             If Regex.IsMatch(Template, "\[Culture\]", RegexOptions.IgnoreCase) Then
@@ -2602,6 +2974,16 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Template = Regex.Replace(Template, "\[Language\]", CurrentLanguage, RegexOptions.IgnoreCase)
             End If
 
+
+            'Get PageType Class
+            If Regex.IsMatch(Template, "\[PageType\]", RegexOptions.IgnoreCase) Then
+                Template = Regex.Replace(Template, "\[PageType\]", GetPageType, RegexOptions.IgnoreCase)
+            End If
+
+            'Get Browser Class
+            If Regex.IsMatch(Template, "\[IE\]", RegexOptions.IgnoreCase) Then
+                Template = Regex.Replace(Template, "\[IE\]", GetBrowserClass(12, "ie"), RegexOptions.IgnoreCase)
+            End If
 
 
             WritePageClass(Template.Trim)
@@ -2637,6 +3019,91 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Function
 
 
+        Private Function GetPageType() As String
+            'Get the type of the current page.
+
+            Dim sTemplate As String = "PageType_{0}"
+
+            Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = PortalSettings.ActiveTab
+            Dim iTabId As Integer = oTab.TabID
+
+            Dim sOut As String = String.Empty
+
+            'Home Tab?
+
+            If iTabId = PortalSettings.HomeTabId Then
+                sOut = ConcatCssClasses(sOut, "Home", sTemplate, False)
+            End If
+
+            If iTabId = PortalSettings.SplashTabId Then
+                sOut = ConcatCssClasses(sOut, "Splash", sTemplate, False)
+            End If
+
+            If iTabId = PortalSettings.LoginTabId Or Request.RawUrl.Contains("/ctl/Login/") Or Request.RawUrl.Contains("/Login?") Then
+                sOut = ConcatCssClasses(sOut, "Login", sTemplate, False)
+            End If
+
+            If iTabId = PortalSettings.RegisterTabId Then
+                sOut = ConcatCssClasses(sOut, "Register", sTemplate, False)
+            End If
+
+            If iTabId = PortalSettings.UserTabId Then
+                sOut = ConcatCssClasses(sOut, "User", sTemplate, False)
+            End If
+            If iTabId = PortalSettings.SearchTabId Then
+                sOut = ConcatCssClasses(sOut, "Search", sTemplate, False)
+            End If
+
+            'This is an admin or host tab
+            If PortalSettings.ActiveTab.AuthorizedRoles = "Administrators;" OR PortalSettings.ActiveTab.AuthorizedRoles = "" Then
+                sOut = ConcatCssClasses(sOut, "Admin", sTemplate, False)
+            End If
+
+            If sOut = "" Then
+                sOut = ConcatCssClasses(sOut, "Normal", sTemplate, False)
+            End If
+
+            Return sOut
+
+        End Function
+
+
+        Private Function GetBrowserClass(max As Integer, BrowserFilter As String) As String
+
+            Dim sOut As New StringBuilder
+
+            Dim sBrowser As String = GetBrowser()
+
+            If Regex.IsMatch(sBrowser, BrowserFilter, RegexOptions.IgnoreCase) Then
+
+                Dim iVersion As Integer = Math.Abs(GetBrowserVersion())
+
+                sOut.Append(String.Format("{0}{1}", sBrowser, iVersion.ToString))
+
+
+                If max > iVersion Then
+
+					Dim x as Integer
+				
+                    For x = iVersion + 1 To max
+
+                        sOut.Append(String.Format(" lt-{0}{1}", sBrowser, x))
+
+                    Next
+
+                End If
+
+            End If
+
+
+
+
+            Return sOut.ToString
+
+
+        End Function
+
+
 
 
         Private Sub WritePageClass(ByVal sIn As String)
@@ -2644,6 +3111,32 @@ Namespace FortyFingers.Dnn.SkinObjects
             Dim oBody As New HtmlGenericControl
             oBody = CType(Me.Page.FindControl("Body"), HtmlGenericControl)
             oBody.Attributes.Add("class", sIn.Trim)
+
+        End Sub
+
+
+        ''' <summary>
+        ''' Add content after the body tag..
+        ''' </summary>
+        ''' <param name="sIn"></param>
+        ''' <remarks></remarks>
+        ''' 
+        Private Sub ProcessAddToBody(sIn As String, Position As InjectPosition)
+
+            Dim oBody As Control = Me.Page.FindControl("Body")
+
+            If Not oBody Is Nothing Then
+
+                Dim oLit As New Literal
+                oLit.Text = ProcessTokens(sIn)
+
+                If Position = InjectPosition.Top Then
+                    oBody.Controls.AddAt(0, olit)
+                Else
+                    oBody.Controls.AddAt(oBody.Controls.Count(), oLit)
+                End If
+
+            End If
 
         End Sub
 
@@ -2680,6 +3173,40 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Function CreateValidCssClass(ByVal sIn As String) As String
 
             Return Regex.Replace(sIn, "^[^A-z]|[^A-z0-9]", "_")
+
+        End Function
+
+
+
+        ''' <summary>
+        ''' Concat Css Class strings
+        ''' </summary>
+        ''' <param name="Start">Base String to add to</param>
+        ''' <param name="Add">String to add to Base</param>
+        ''' <param name="Template">Tempalte for the String to add</param>
+        ''' <param name="ValidateClass">Convert added String to valid CSS class</param>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Private Function ConcatCssClasses(Start As String, Add As String, Optional Template As String = "", Optional ValidateClass As Boolean = False) As String
+
+            'Parse Template
+            If Template > "" Then
+                Add = String.Format(Template, Add)
+            End If
+
+
+            'Convert to valid CSS class if needed
+            If ValidateClass Then
+                Add = CreateValidCssClass(Add)
+            End If
+
+            If Start = String.Empty Then
+                Return Add
+            Else
+                Return String.Format("{0} {1}", Start, Add)
+            End If
+
+
 
         End Function
 

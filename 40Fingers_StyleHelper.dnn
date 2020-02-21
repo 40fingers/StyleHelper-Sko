@@ -1,6 +1,6 @@
 ﻿<dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="40Fingers_StyleHelper" type="SkinObject" version="2.7.6">
+    <package name="40Fingers_StyleHelper" type="SkinObject" version="2.8.6">
       <friendlyName>40FINGERS.NET StyleHelper</friendlyName>
       <description>
 	  <![CDATA[
