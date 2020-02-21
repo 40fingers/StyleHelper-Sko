@@ -415,6 +415,8 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
+
+
         Private _bShowInfo As Boolean
         ''' <summary>
         ''' Render ShowInfo info in browser, like browser version
@@ -676,6 +678,38 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
+
+#End Region
+
+#Region "Ml properties"
+
+        Private _sLanguageLinksTemplate As String = "<link rel='alternate' hreflang='[LOCALE:CODE]' href='[URL]' />"
+
+
+        Public Property LanguageLinksTemplate() As String
+            Get
+                Return _sLanguageLinksTemplate
+            End Get
+            Set(ByVal value As String)
+                _sLanguageLinksTemplate = value
+            End Set
+        End Property
+
+
+
+        Private _bAddLanguageLinksToHead As Boolean
+        ''' <summary>
+        ''' Adds Language links head for the other languages thi spage is available in
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property AddLanguageLinksToHead() As Boolean
+            Get
+                Return _bAddLanguageLinksToHead
+            End Get
+            Set(ByVal value As Boolean)
+                _bAddLanguageLinksToHead = value
+            End Set
+        End Property
 
 #End Region
 
@@ -1307,6 +1341,19 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
 
+            If AddLanguageLinksToHead Then
+
+                Dim strLinks As String = GetLanguageLinks(PortalSettings.ActiveTab.TabID, LanguageLinksTemplate)
+
+
+                If strLinks <> String.Empty Then
+                    Add2Head(strLinks)
+                End If
+
+
+            End If
+
+
             If Not RemoveMeta = String.Empty Then
                 If FilterRemove = False Or bConditions Then
                     ProcessRemoveMeta()
@@ -1383,7 +1430,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 sContent = ContentFalse
             End If
 
-            ltShowInfo.Text = ProcessTokens(Content)
+            ltShowInfo.Text = ProcessTokens(sContent)
 
 
 
@@ -1436,27 +1483,49 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
         Private Function CheckCookie(ByVal CookieName As String, ByVal CookieValue As String) As Boolean
-            'Check if the cookie exists, if it has the right value and is not expired..
+            ' Check if the cookie exists, if it has the right value and is not expired..
+            ' If CookieValue = "" then retrun True too.
 
-            'Check if the Cookie Exists
-            If Not Request.Cookies(CookieName) Is Nothing Then
-                'Check if the Cookie value is correct
-                If Server.HtmlEncode(Request.Cookies(CookieName).Value) = CookieValue Then
+            Dim key As String = HttpContext.Current.Server.UrlEncode(CookieName)
+
+            ' Test if the Cookie exists.
+            ' First check in Response
+            ' If not found try in the Request object (as otherwise you could get the old and the new value if DNN rewrites the value in this request)
+
+            If HttpContext.Current.Response.Cookies.AllKeys.Contains(key) Then
+                'Check if the Cookie value is correct or empty
+                If CookieValue = "" OrElse GetResponseCookie(CookieName) = CookieValue Then
                     Return True
+                End If
+
+            Else
+                ' if not in response, try in request (already on client)
+                'Check if the Cookie Exists
+                If Not Request.Cookies(CookieName) Is Nothing Then
+                    'Check if the Cookie value is correct
+                    If CookieValue = "" OrElse Server.HtmlEncode(Request.Cookies(CookieName).Value) = CookieValue Then
+                        Return True
+                    End If
                 End If
             End If
 
-            'Check if the Cookie Exists in Response
-            If Not Response.Cookies(CookieName) Is Nothing Then
-                'Check if the Cookie value is correct
-                If Server.HtmlEncode(Response.Cookies(CookieName).Value) = CookieValue Then
-                    Return True
-                End If
-            End If
 
             Return False
 
         End Function
+
+
+
+        Private Function GetResponseCookie(key as string) as string
+		
+			'encode key for retrieval
+            key = HttpContext.Current.Server.UrlEncode(key)
+			dim ck as HttpCookie = HttpContext.Current.Response.Cookies.Get(key)
+            return (ck.Value)
+			
+		End Function
+		
+
 
 
         Private Sub CreateCookie(ByVal CookieName As String, ByVal CookieValue As String, ByVal CookieExpireDays As Integer)
@@ -1871,12 +1940,14 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Next
             End If
 
+
             'JS files
             If Not AddJsFile.Trim = String.Empty Then
                 For Each s As String In SplitString(AddJsFile, ",")
 
                     'Process tokens
                     s = ProcessTokens(s)
+
 
                     'Check for "" again as this could be the case if one of the tokens returns nothing
                     If Not s = String.Empty Then
@@ -2154,7 +2225,7 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Function ProcessPath(ByVal BasePath As String, ByVal Path As String) As String
 
             'Check if the subpath is not a absolute URI and there is no root token in the base path.
-            If Not (Regex.IsMatch(Path, "\[.\]", RegexOptions.IgnoreCase) OrElse Path.Contains("://") OrElse Path.StartsWith("//")) Then
+            If Not (Regex.IsMatch(Path, "\[.\]", RegexOptions.IgnoreCase) OrElse Path.Contains("://") OrElse Path.StartsWith("/")) Then
                 Path = CombinePath(PathTokenReplace(BasePath), Path)
             Else
                 Path = PathTokenReplace(Path)
@@ -2700,8 +2771,13 @@ Namespace FortyFingers.Dnn.SkinObjects
         Protected Function GetBrowserVersion() As Version
 
             'Get a version object for the users browser
-
-            Dim sVersion As String = Request.Browser.Version.Replace(",", ".")
+			Dim sVersion As String
+			
+			If Not Request.Browser.Version Is Nothing Then
+				sVersion = Request.Browser.Version.Replace(",", ".")
+			Else
+				sVersion = "0.0.0"
+			End If
 
             Return New Version(sVersion)
 
@@ -2805,6 +2881,9 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
         End Function
+
+
+
 
         Private Function GetUserroles() As String
             'Gets the roles a user is in as one string for regex comparison
@@ -3034,15 +3113,22 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Protected Function GetBrowserName() As String
 
-            Dim sOut As String = Request.Browser.Browser.ToLower
+            Dim sOut As String = String.Empty
 
-            'Correct change of returned browser for IE 11
-            If sOut = "internetexplorer" Then sOut = "ie"
-            If sOut = "internet explorer" Then sOut = "ie"
+            If Not Request.Browser.Browser Is Nothing Then
 
-            'Workaround for Edge (not in the browser capabilites file)
-            If Regex.IsMatch(Request.UserAgent, "Edge\/\d+") Then
-                sOut = "edge"
+
+                sOut = Request.Browser.Browser.ToLower
+
+                'Correct change of returned browser for IE 11
+                If sOut = "internetexplorer" Then sOut = "ie"
+                If sOut = "internet explorer" Then sOut = "ie"
+
+                'Workaround for Edge (not in the browser capabilites file)
+                If Regex.IsMatch(Request.UserAgent, "Edge\/\d+") Then
+                    sOut = "edge"
+                End If
+
             End If
 
             Return sOut
@@ -3285,15 +3371,24 @@ Namespace FortyFingers.Dnn.SkinObjects
                 'Is there a portal token
                 If sOriginal.Contains(strPortal) Then
 
+                    Dim strProtocol As String = GetAliasProtocol()
+                    Dim strParentAlias As String = GetParentAlias()
+
+
+
                     'Replace PortalId
                     sOriginal = ReplaceToken(sOriginal, "[Portal:Id]", PortalSettings.PortalId.ToString, TextType.Text)
                     sOriginal = ReplaceToken(sOriginal, "[PortalId]", PortalSettings.PortalId.ToString, TextType.Text) ' Legacy
 
                     sOriginal = ReplaceToken(sOriginal, "[Portal:Alias]", PortalSettings.PortalAlias.HTTPAlias, Type)
-                    sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Root]", GetParentAlias(), Type)
-                    sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Protocol]", GetAliasProtocol(), Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Root]", strParentAlias, Type)
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Alias.Protocol]", strProtocol, Type)
 
                     sOriginal = ReplaceToken(sOriginal, "[Portal:Name]", PortalSettings.PortalName, Type)
+
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Logo]", PortalSettings.LogoFile, Type)
+
+                    sOriginal = ReplaceToken(sOriginal, "[Portal:Logo.Path]", strProtocol & "://" & strParentAlias & PortalSettings.HomeDirectory & PortalSettings.LogoFile, Type)
 
                     sOriginal = ReplaceSettingsToken(sOriginal, SettingsType.Portal, Type)
 
@@ -3575,13 +3670,13 @@ Namespace FortyFingers.Dnn.SkinObjects
 
                 Case SettingsType.Tab
 
-                        Dim oTabC As New TabController
-                        Dim htTabSettings As Hashtable = oTabC.GetTabSettings(TabId)
-                        Return htTabSettings(PropertyName).ToString
+                    Dim oTabC As New TabController
+                    Dim htTabSettings As Hashtable = oTabC.GetTabSettings(TabId)
+                    Return htTabSettings(PropertyName).ToString
 
 
 
-                End Select
+            End Select
 
 
             Return ""
@@ -3649,6 +3744,96 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         End Function
 
+
+#Region "MultiLanguage"
+
+
+
+        Private Function GetLanguageLinks(TabId As Integer, Template As String) As String
+
+            Dim strOut As String = String.Empty
+
+            ' Check if Localization is enabled or not
+            If LocalizationEnabled() Then
+
+                Dim oLocalizedTabs As Dictionary(Of String, Locale) = DotNetNuke.Services.Localization.LocaleController.Instance.GetLocales(PortalSettings.PortalId)
+
+                If Not oLocalizedTabs Is Nothing Then
+
+                    For Each oLocale As KeyValuePair(Of String, Locale) In oLocalizedTabs
+
+                        Dim oLoc As Locale = CType(oLocale.Value, Locale)
+
+                        If oLoc.IsPublished Then
+
+                            Dim strUrl = GetPageTranslated(TabId, oLoc.Code)
+
+                            If strUrl <> String.Empty Then
+
+                                Dim strLink As String = Template
+
+                                ' Tokens
+                                strLink = Regex.Replace(strLink, "\[URL\]", strUrl, RegexOptions.IgnoreCase)
+                                strLink = Regex.Replace(strLink, "\[LOCALE:CODE\]", oLoc.Code, RegexOptions.IgnoreCase)
+
+
+                                strOut &= strLink
+
+                            End If
+
+                        End If
+
+
+                    Next
+
+                End If
+
+            End If
+
+            Return strOut
+
+
+        End Function
+
+        ''' <summary>
+        ''' Get the url of a page in the other language
+        ''' </summary>
+        ''' <param name="TabId"></param>
+        ''' <param name="CultureCode"></param>
+        ''' <returns></returns>
+        Private Function GetPageTranslated(TabId As Integer, CultureCode As String) As String
+
+            Dim oTabC As New TabController
+
+            Dim oLocale As New DotNetNuke.Services.Localization.Locale
+            oLocale = DotNetNuke.Services.Localization.LocaleController.Instance.GetLocale(CultureCode)
+
+
+            If Not oLocale Is Nothing Then
+
+                Dim oTab As DotNetNuke.Entities.Tabs.TabInfo = oTabC.GetTabByCulture(PortalSettings.ActiveTab.TabID, PortalSettings.PortalId, oLocale)
+
+                If Not (oTab Is Nothing) AndAlso oTab.IsTranslated Then
+
+                    Return oTab.FullUrl
+
+                End If
+
+            End If
+
+                Return ""
+
+
+        End Function
+
+
+        Private Function LocalizationEnabled() As Boolean
+
+            Return PortalController.GetPortalSettingAsBoolean("ContentLocalizationEnabled", PortalSettings.PortalId, False)
+
+        End Function
+
+#End Region
 
 #Region "PageClasses"
 
