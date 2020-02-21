@@ -1,6 +1,6 @@
 <div>
     <h2>
-        40FINGERS DotNetNuke Stylehelper skin object, Version 02.06.04</h2>
+        40FINGERS DotNetNuke Stylehelper skin object, Version 02.07.05</h2>
     <img width="242" height="268" align="right" src="http://www.40fingers.net/Portals/0/Blogs/timo/StyleHelper/StyleHelperBox.png" alt="" />
     <p>
         Project Page:<br />
@@ -12,6 +12,128 @@
     </p>
     <div style="clear: both;">
         &nbsp;</div>
+		
+		
+<h3>Version 02.07.06:</h3>
+    <h4>Corrected
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+			<b>IE11 detection correction</b><br />
+			ASP.NET detects IE11 as "internetexplorer",  while previous version returned "ie"<br />
+			That's corrected now, StyleHelper now also return "ie" for IE11. :-)<br />
+            </p>
+        </li>
+	</ul>
+    <h4>Added
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>[BcLevel] token for BodyClass</b><br />
+				Renders a class for the levels in te breadcrumb.<br />
+				BodyClass="[BcLevel]" will render a class for the current pages level and it's parents<br />
+			</p>
+        </li>
+	</ul>
+	
+
+				<h3>Version 02.07.05:</h3>
+    <h4>Fixed
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+			<b>Issue with multiple RemoveFromHead Values</b><br />
+			Lead to an error, is fixed now.<br />
+            </p>
+        </li>
+	</ul>
+	
+		    <h3>
+        Version 02.07.04:</h3>
+    <h4>Added
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>[Culture] and [Language] to BodyClass</b><br />
+				The current Page Culture and the Page Language are added to the Body element's CSS class.<br />
+				The default template for the bodyclass is now:<br />
+				"[BcName] [BcId] [BcNr] [UserPageRoles] Cult-[Culture] Lang-[Language]"<br />
+				[Culture] renders the current Page Culture<br />
+				[Language] renders the current Page Language
+				<p>
+				Example of rendered body tag:<br />
+				&lt;body id=&quot;Body&quot; class=&quot;... Cult-en-US Lang-en&quot;&gt;
+				</p>
+
+        </li>
+	</ul>
+	
+	
+		<h3>Version 02.07.03:</h3>
+    <h4>Fixed
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+			<b>Issue where injected elements were removed</b><br />
+			The order of injecting and removing was incorrect.<br />
+			Because of this a combination of removing and injecting could also remove the injected element.
+            </p>
+        </li>
+	</ul>
+	
+		    <h3>
+        Version 02.07.02:</h3>
+    <h4>Fixed
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+				<b>Issue in mobile detection Regex.</b><br />
+                <b>Issue with comma separated values</b>
+				
+			</p>
+        </li>
+	</ul>
+	
+    <h3>
+        Version 02.07.01:</h3>
+    <h4>Added
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>IfUserMode</b><br />
+				Condition based on the User Mode<br />
+				Possible values:
+				<ul>
+				<li>None = User Not logged in</li>
+				<li>View = User Logged in, Control Panel in View Mode</li>
+				<li>Edit = User Logged in, Control Panel in Edit Mode</li>
+				<li>Layout = User Logged in, Control Panel in Layout Mode</li>
+				</ul>
+				&lt;fortyfingers:STYLEHELPER ID=&quot;SH1&quot; RemoveCssFile=&quot;default.css,portal.css&quot; IfUserMode=&quot;None&quot; runat=&quot;server&quot; /&gt;<br />
+				Will remove Default.css and Portal.css for not Authenticated users
+        </li>
+	</ul>
+	
+    <h3>
+        Version 02.07.00:</h3>
+    <h4>Fixed
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Remove individual style sheets in DNN 6.1+</b><br />
+				I had problems removing style sheets in DNN 6.1+<br />
+				I now found a way to remove them anyway, without adding a custom provider.<br />
+				Simply use the RemveoCssFile attribute as you would use it in DNN 5.</p>
+        </li>
+	</ul>
     <h3>
         Version 02.06.06:</h3>
     <h4>Added

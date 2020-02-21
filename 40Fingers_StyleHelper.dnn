@@ -1,6 +1,6 @@
 ﻿<dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="40Fingers_StyleHelper" type="SkinObject" version="2.6.6">
+    <package name="40Fingers_StyleHelper" type="SkinObject" version="2.7.6">
       <friendlyName>40FINGERS.NET StyleHelper</friendlyName>
       <description>
 	  <![CDATA[
@@ -28,7 +28,7 @@
         <email>timo@40fingers.net</email>
       </owner>
 	<dependencies>
-			<dependency type="CoreVersion">05.06.00</dependency>
+			<dependency type="CoreVersion">06.01.02</dependency>
 	</dependencies>
       <components>
         <component type="SkinObject">

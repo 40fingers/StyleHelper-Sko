@@ -1,4 +1,5 @@
 Imports DotNetNuke
+Imports DotNetNuke.Security.Permissions
 Imports System.Collections.Generic
 
 
@@ -365,7 +366,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Dim _sBodyClass As String = "[BcName] [BcId] [BcNr] [UserPageRoles]"
+        Dim _sBodyClass As String = "[BcName] [BcId] [BcNr] [UserPageRoles] Cult-[Culture] Lang-[Language]"
         ''' <summary>
         ''' Template for the page class
         ''' </summary>
@@ -565,15 +566,35 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
+
+        Private _sIfUserMode As String
+        ''' <summary>
+        ''' If the user mode is "None,View,Edit,Layout'
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property IfUserMode() As String
+            Get
+                Return _sIfUserMode
+            End Get
+            Set(ByVal value As String)
+                _sIfUserMode = value
+            End Set
+        End Property
+
+
+
+
         Private _sIfRole As String = String.Empty
         ''' <summary>
-        ''' Comma seperated list of browsers / versions
+        ''' Comma seperated list roles the user is in
         ''' </summary>
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property IfRole() As String
-            'List of browsers to load this for
+            '
             Set(ByVal value As String)
                 _sIfRole = value
             End Set
@@ -683,7 +704,7 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private _sClientDetectMethod As String = "detectmobilebrowsers.com"
         'For later use
 
-        Private _sDetectMobileRegex1 As String = "android.+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino"
+        Private _sDetectMobileRegex1 As String = "(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino"
         ''' <summary>
         ''' First regular expression to detect Mobile browsers
         ''' </summary>
@@ -712,7 +733,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return _bDetectMobileIncludeTablet
             End Get
             Set(ByVal value As Boolean)
-                If value Then DetectMobileRegex1 = "android|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(ad|hone|od)|iris|kindle|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino|playbook|silk"
+                If value Then DetectMobileRegex1 = DetectMobileRegex1 & "|android|ipad|playbook|silk"
                 _bDetectMobileIncludeTablet = value
 
             End Set
@@ -720,7 +741,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Private _sDetectMobileRegex2 As String = "1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|e\-|e\/|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(di|rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|xda(\-|2|g)|yas\-|your|zeto|zte\-"
+        Private _sDetectMobileRegex2 As String = "1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-"
         ''' <summary>
         ''' First regular expression to detect Mobile browsers
         ''' </summary>
@@ -959,6 +980,10 @@ Namespace FortyFingers.Dnn.SkinObjects
                 ProcessRedirect()
             End If
 
+            If Not RemoveFromHead = String.Empty Then
+                ProcessRemoveFromHead()
+            End If
+
             If Not RemoveCssFile = String.Empty Then
                 If FilterRemove = False Or bConditions Then
                     ProcessRemoveFiles()
@@ -1012,13 +1037,10 @@ Namespace FortyFingers.Dnn.SkinObjects
                 End If
             End If
 
-            If Not RemoveFromHead = String.Empty Then
-                ProcessRemoveFromHead()
-            End If
 
             ProcessDoctype()
 
-            'Add the HTML attributes, only needed for DNN 6
+            'Add the HTML attributes, only needed for DNN 6+
             If CheckDnnVersion("6.0") >= 0 Then
                 Dim oAttributes As Literal = Me.Page.FindControl("attributeList")
                 If Not oAttributes Is Nothing Then
@@ -1270,7 +1292,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             If Not RemoveCssFile.Trim = String.Empty Then
 
-                For Each s As String In RemoveCssFile.Split(",")
+                For Each s As String In SplitString(RemoveCssFile, ",")
                     UnloadCss(s.Trim)
                 Next
 
@@ -1284,7 +1306,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             If Not RemoveControls.Trim = String.Empty Then
 
-                For Each s As String In RemoveControls.Split(",")
+                For Each s As String In SplitString(RemoveControls, ",")
                     RemoveControl(s.Trim)
                 Next
 
@@ -1298,7 +1320,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             Dim oHead As HtmlGenericControl = Me.Page.FindControl("Head")
 
 
-            For Each s As String In RemoveMeta.Split("||")
+            For Each s As String In SplitString(RemoveMeta, "||")
 
                 If s.StartsWith("id=") Then 'ID passed, meaning this is a Meta Control
                     s = s.Replace("id=", "")
@@ -1401,22 +1423,28 @@ Namespace FortyFingers.Dnn.SkinObjects
             Dim oIncludes As Control = Me.Page.FindControl("ClientResourceIncludes")
             If Not oIncludes Is Nothing Then
 
+                'Get list of child items client resource controls
                 Dim lstControl2Remove As New List(Of Control)
 
-                For Each oCs As Control In oIncludes.Controls()
-                    Select Case oCs.GetType.ToString
+                'Loop though Items
+                For Each oCssControl As Control In oIncludes.Controls()
+                    'Check if it's a CssInclude
+                    Select Case oCssControl.GetType.ToString
                         Case "DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude"
-                            Dim oCSSRemove As DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude = CType(oCs, DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude)
-
+                            Dim oCSSRemove As DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude = CType(oCssControl, DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude)
+                            'Check the path
                             If CheckStringFound(oCSSRemove.FilePath, sFileName) Then
-                                lstControl2Remove.Add(oCs)
+                                'Add to the list of controls to remove
+                                lstControl2Remove.Add(oCssControl)
                             End If
+
                     End Select
                 Next
 
-                For Each oC2remove As Control In lstControl2Remove
+                'Loop through found controls and remove them
+                For Each oCss2remove As Control In lstControl2Remove
 
-                    oIncludes.Controls.Remove(oC2remove)
+                    oIncludes.Controls.Remove(oCss2remove)
 
                 Next
 
@@ -1433,7 +1461,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             If Not AddMetaTags.Trim = String.Empty Then
                 'Get the individual meta Tags
-                For Each s As String In AddMetaTags.Split("|")
+                For Each s As String In SplitString(AddMetaTags, "|")
                     'Split name and Value
                     Dim m As String() = s.Split(":")
                     If m.Length = 2 Then
@@ -1464,7 +1492,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             'CSS files
             If Not AddCssFile.Trim = String.Empty Then
 
-                For Each s As String In AddCssFile.Split(",")
+                For Each s As String In SplitString(AddCssFile, ",")
 
                     'First process tokens to prevent issues with css file media passed (uses : too)
 
@@ -1499,7 +1527,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             'JS files
             If Not AddJsFile.Trim = String.Empty Then
-                For Each s As String In AddJsFile.Split(",")
+                For Each s As String In SplitString(AddJsFile, ",")
 
                     'Process tokens
                     s = ProcessTokens(s)
@@ -1518,7 +1546,7 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Sub ProcessAdd2Head()
             'Process the string that are to be added to the head of the page
 
-            For Each s As String In AddToHead.Split("||")
+            For Each s As String In SplitString(AddToHead, "||")
                 Add2Head(s)
             Next
 
@@ -1557,44 +1585,46 @@ Namespace FortyFingers.Dnn.SkinObjects
             'Will not work on most js and css files
             Dim oHead As HtmlGenericControl = Me.Page.FindControl("Head")
 
-            For Each s As String In RemoveFromHead.Split("||")
-
-                Dim oValPair As New ParameterValue(s, "=")
-
-                For Each oControl As Control In oHead.Controls()
-                    Select Case oControl.GetType.ToString
-                        Case "System.Web.UI.HtmlControls.HtmlLink"
-
-                            'oControl.Visible = False
-                            Dim oLink As System.Web.UI.HtmlControls.HtmlLink
-                            oLink = oControl
-                            If oLink.Attributes.Item(oValPair.Parameter) = oValPair.Value1 Then
-                                oControl.Visible = False
-                            End If
-
-                        Case "System.Web.UI.HtmlControls.HtmlMeta"
-
-                            'oControl.Visible = False
-                            Dim oMeta As System.Web.UI.HtmlControls.HtmlMeta
-                            oMeta = oControl
-                            If oMeta.Attributes.Item(oValPair.Parameter) = oValPair.Value1 Then
-                                oControl.Visible = False
-                            End If
-
-                        Case "System.Web.UI.WebControls.Literal"
-                            Dim oLiteral As System.Web.UI.WebControls.Literal
-                            oLiteral = oControl
-                            Dim sFind As String = oValPair.Parameter & "\s?=\s?[""']" & oValPair.Value1 & "[""']"
-                            If Regex.IsMatch(oLiteral.Text, sFind, RegexOptions.IgnoreCase) Then
-                                oControl.Visible = False
-                            End If
-
-                    End Select
 
 
-                Next
+            For Each s As String In SplitString(RemoveFromHead, "||")
+
+                If Not s = "" Then
+                    Dim oValPair As New ParameterValue(s, "=")
+
+                    For Each oControl As Control In oHead.Controls()
+                        Select Case oControl.GetType.ToString
+                            Case "System.Web.UI.HtmlControls.HtmlLink"
+
+                                'oControl.Visible = False
+                                Dim oLink As System.Web.UI.HtmlControls.HtmlLink
+                                oLink = oControl
+                                If oLink.Attributes.Item(oValPair.Parameter) = oValPair.Value1 Then
+                                    oControl.Visible = False
+                                End If
+
+                            Case "System.Web.UI.HtmlControls.HtmlMeta"
+
+                                'oControl.Visible = False
+                                Dim oMeta As System.Web.UI.HtmlControls.HtmlMeta
+                                oMeta = oControl
+                                If oMeta.Attributes.Item(oValPair.Parameter) = oValPair.Value1 Then
+                                    oControl.Visible = False
+                                End If
+
+                            Case "System.Web.UI.WebControls.Literal"
+                                Dim oLiteral As System.Web.UI.WebControls.Literal
+                                oLiteral = oControl
+                                Dim sFind As String = oValPair.Parameter & "\s?=\s?[""']" & oValPair.Value1 & "[""']"
+                                If Regex.IsMatch(oLiteral.Text, sFind, RegexOptions.IgnoreCase) Then
+                                    oControl.Visible = False
+                                End If
+
+                        End Select
 
 
+                    Next
+                End If
 
             Next
 
@@ -1607,7 +1637,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Sub ProcessHtmlAttributes()
             'Process pipe separated list of attributes for the HTML element
-            For Each m As String In AddHtmlAttribute.Split("|")
+            For Each m As String In SplitString(AddHtmlAttribute, "|")
                 Dim s As String() = m.Split(",")
                 If s.Length = 2 Then
                     AddNewHtmlAttribute(m.Split(",")(0), m.Split(",")(1))
@@ -1807,6 +1837,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             Return CheckBrowsers(IfBrowser) AndAlso _
             CheckUser(IfUserName) AndAlso _
+            CheckUserMode(IfUserMode) AndAlso _
             CheckURLs(IfURL) AndAlso _
             CheckCultures(IfCulture) AndAlso _
             CheckUserAgents(IfUserAgentString) AndAlso _
@@ -1832,7 +1863,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
                 Dim bOut As Boolean = False
-                For Each s As String In sBrowsers.Split(",")
+                For Each s As String In SplitString(sBrowsers, ",")
                     bOut = (CheckBrowser(s))
                     If bOut Then
                         Return (bOut)
@@ -1954,6 +1985,24 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Function
 
 
+        Private Function CheckUserMode(ByVal sUserModes As String) As Boolean
+
+
+            If sUserModes = String.Empty Then
+                Return (True)
+            Else
+                'Get the current usermode
+                Dim sUserMode = PortalSettings.UserMode.ToString
+
+                If TabPermissionController.CanAdminPage() = False Then ' Add Can Edit a module test
+                    sUserMode = "none"
+                End If
+                Return (MatchString(sUserMode, sUserModes))
+            End If
+
+        End Function
+
+
 
 
         Private Function CheckRoles(ByVal sRoles As String) As Boolean
@@ -1970,7 +2019,6 @@ Namespace FortyFingers.Dnn.SkinObjects
                 'As there is no superuser role add it when the current user is a superuser
                 If UserController.GetCurrentUserInfo.IsSuperUser Then
                     sAllroles = CharSepStrAdd(sAllroles, "SuperUsers", "|")
-                    sAllroles = CharSepStrAdd(sAllroles, "SuperUser", "|") 'Legacy, was an error in pervious version
                 End If
 
 
@@ -2164,7 +2212,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
                 Dim bOut As Boolean = False
-                For Each s As String In sCookies.Split("||")
+                For Each s As String In SplitString(sCookies, "||")
                     Dim ParVal As New ParameterValue(s, ":")
                     If CheckCookie(ParVal.Parameter, ParVal.Value1) Then
                         Return True
@@ -2233,7 +2281,11 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Protected Function GetBrowser() As String
 
-            Return Request.Browser.Browser.ToLower
+            Dim sOut As String = Request.Browser.Browser.ToLower
+            'Correct change of returned browser for IE 11
+            If sOut = "internetexplorer" Then sOut = "ie"
+			If sOut = "internet explorer" Then sOut = "ie"
+            Return sOut
 
         End Function
 
@@ -2245,6 +2297,30 @@ Namespace FortyFingers.Dnn.SkinObjects
             Return CultureInfo.CurrentUICulture.Name.ToString
 
         End Function
+
+
+        Private Function CurrentLanguage() As String
+
+            Return CultureInfo.CurrentUICulture.Name.ToString.Substring(0, 2)
+
+        End Function
+
+
+
+        Private Function SplitString(Base As String, Split As String) As Array
+
+            ' Splits a string in an array of string, based on a SplitString
+            Dim sSplit As String = Regex.Escape(Split)
+
+            Return Regex.Split(Base, sSplit, RegexOptions.IgnoreCase)
+
+
+        End Function
+
+
+
+
+
 
 
 
@@ -2346,16 +2422,17 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             Dim bReturn As Boolean = False
 
+            'Split the comma separated list and parse them one by one.
             For Each s As String In Regex.Split(sParameters, ",", RegexOptions.IgnoreCase)
 
                 'Check if the string contains an invert
                 Dim bInvert As Boolean = CheckInvert(s)
-                'Combine the invert and the found boolean for the correct value
 
+                'Check if the passed value is found
                 Dim bFound As Boolean = Regex.IsMatch(sTest, s, RegexOptions.IgnoreCase)
 
+                'If found value needs to be inverted
                 If bInvert Then
-                    'If an inverted value was found, this can never be a match
                     If bFound = True Then
                         Return (False)
                     Else
@@ -2364,7 +2441,12 @@ Namespace FortyFingers.Dnn.SkinObjects
                     End If
                 Else
                     'For a normal value, if the value is found this must be correct, if not it must be incorrect
-                    Return bFound
+                    If bFound = True Then
+                        Return True
+                    Else
+                        bReturn = False
+                    End If
+
                 End If
 
             Next
@@ -2495,10 +2577,29 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Template = Regex.Replace(Template, "\[BcNr\]", sOut, RegexOptions.IgnoreCase)
             End If
 
+            'Get Bc Level Class
+            If Regex.IsMatch(Template, "\[BcLevel\]", RegexOptions.IgnoreCase) Then
+                For Each oTab In PortalSettings.ActiveTab.BreadCrumbs
+                    sOut &= " " & CreateValidCssClass("Level" & oTab.Level)
+                Next
+                Template = Regex.Replace(Template, "\[BcLevel\]", sOut, RegexOptions.IgnoreCase)
+            End If
+
 
             'Get Bc Role Class
             If Regex.IsMatch(Template, "\[UserPageRoles\]", RegexOptions.IgnoreCase) Then
-                Template = Regex.Replace(Template, "\[UserPageRoles\]", GetUserPageRolesClass)
+                Template = Regex.Replace(Template, "\[UserPageRoles\]", GetUserPageRolesClass, RegexOptions.IgnoreCase)
+            End If
+
+
+            'Get Culture Class
+            If Regex.IsMatch(Template, "\[Culture\]", RegexOptions.IgnoreCase) Then
+                Template = Regex.Replace(Template, "\[Culture\]", CurrentCulture, RegexOptions.IgnoreCase)
+            End If
+
+            'Get Language Class
+            If Regex.IsMatch(Template, "\[Language\]", RegexOptions.IgnoreCase) Then
+                Template = Regex.Replace(Template, "\[Language\]", CurrentLanguage, RegexOptions.IgnoreCase)
             End If
 
 
