@@ -1,0 +1,55 @@
+﻿<dotnetnuke type="Package" version="5.0">
+  <packages>
+    <package name="40Fingers_StyleHelper" type="SkinObject" version="2.6.6">
+      <friendlyName>40FINGERS.NET StyleHelper</friendlyName>
+      <description>
+	  <![CDATA[
+		<h2>40FINGERS Style Helper Skin object:</h2>
+		<ul>
+			<li>Manipulate, Links to CSS files, Javascript file references &amp; Meta tags, Content in the head of your page etc.
+			</li>
+			<li>
+			Set conditions for this, based on browser, username, role, query string etc.
+			</li>
+			<li>Add a CSS class to the Body element of your page and redirect mobile browsers to another page.
+			</li>
+			<li>
+			And much more...
+			</li>
+		</ul>
+	  ]]>
+      </description>
+		<license src="License.htm" />
+		<releaseNotes src="ReleaseNotes.htm" />
+      <owner>
+        <name>Timo Breumelhof</name>
+        <organization>40FINGERS</organization>
+        <url>www.40fingers.net</url>
+        <email>timo@40fingers.net</email>
+      </owner>
+	<dependencies>
+			<dependency type="CoreVersion">05.06.00</dependency>
+	</dependencies>
+      <components>
+        <component type="SkinObject">
+          <moduleControl>
+            <controlKey>40FINGERS_STYLEHELPER</controlKey>
+            <controlSrc>DesktopModules/40fingers/skinobjects/stylehelper/StyleHelper.ascx</controlSrc>
+            <supportsPartialRendering>False</supportsPartialRendering>
+          </moduleControl>
+        </component>
+        <component type="File">
+          <files>
+            <basePath>DesktopModules\40fingers\skinobjects\stylehelper</basePath>
+            <file>
+              <name>StyleHelper.ascx</name>
+            </file>
+            <file>
+              <name>StyleHelper.ascx.vb</name>
+            </file>
+          </files>
+        </component>
+      </components>
+    </package>
+  </packages>
+</dotnetnuke>

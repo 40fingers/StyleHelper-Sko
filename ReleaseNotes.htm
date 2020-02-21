@@ -1,0 +1,295 @@
+<div>
+    <h2>
+        40FINGERS DotNetNuke Stylehelper skin object, Version 02.06.04</h2>
+    <img width="242" height="268" align="right" src="http://www.40fingers.net/Portals/0/Blogs/timo/StyleHelper/StyleHelperBox.png" alt="" />
+    <p>
+        Project Page:<br />
+        <a href="http://stylehelper.codeplex.com/">stylehelper.codeplex.com</a>
+    </p>
+    <p>
+        Product of:<br />
+        <a href="http://www.40fingers.net">40Fingers</a>
+    </p>
+    <div style="clear: both;">
+        &nbsp;</div>
+    <h3>
+        Version 02.06.06:</h3>
+    <h4>Added
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>RemoveFromHead</b><br />
+				Allows you to remove elements from the head of the page, depending of their attributes<br />
+                For instance: 
+				&lt;fortyfingers:STYLEHELPER ID=&quot;SH1&quot; RemoveFromHead=&quot;rel=SHORTCUT ICON&quot; runat=&quot;server&quot; /&gt;
+				will remove the favicon.
+				This will not work for the style sheets or JS as they are injected in a different way.<br />
+				Pass multiple pairs separated by two pipe characters.
+            </p>
+        </li>
+        <li style="list-style-type: none;">
+            <p>
+                <b>AddToHead support tokens</b><br />
+				Now allows the use of tokens for the path. <br />
+                For instance: 
+				&lt;fortyfingers:STYLEHELPER ID=&quot;SH1&quot; IfBrowser=&quot;!IE&lt;9&quot; AddToHead=&quot;&lt;script src='[S]Js/40fingers.js' type='text/javascript'&gt;&lt;/script&gt;&quot; runat=&quot;server&quot; /&gt;<br />
+				Will inject a JS file for all browsers bu IE below version 9.<br />
+				</p>
+				<p>
+				Tokens: <br />
+				[S] = Skin folder<br />
+				[P] = Portal Home directory<br />
+				[M] = Skin object home folder<br />
+				[R] = Installation Root<br />
+				[D] = DesktopModules Folder<br />
+				</p>
+            </p>
+        </li>
+    </ul>
+    <h3>
+        Version 02.06.05:</h3>
+    <h4>Bug Fix
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Page Order class in Body Class:</b><br />
+				On upgraded DNN installtions where some pages have a Culturecode and some not the order was calculated incorrectly.<br />
+                This has been corrected by removing a not needed CultureCode check.<br />
+            </p>
+        </li>
+    </ul>
+    <h3>
+        Version 02.06.04:</h3>
+    <h4>Bug Fix
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Fixed SuperUser Detection:</b><br />
+				Passing IfRole="SuperUsers" did not detect Host users<br />
+                This has been corrected now and the code has been rewritten.<br />
+            </p>
+        </li>
+    </ul>
+    <h4>New Attribute
+        </h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Added ContentFalse attribute</b><br />
+				This is the content that gets injected when the conditions are not met.<br />
+            </p>
+        </li>
+    </ul>
+	
+    <h3>
+        Version 02.06.03:</h3>
+    <h4>
+        Changed IfQs behavior:</h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>IfQs also to test if a query String Parameter exists</b><br />
+                You can now pass a QS paramter without value<br />
+                Where IfQS="ProductId:122" would test for a QS parameter ProductId with value 122<br />
+				IfQS="ProductId" allows you to test if querystring parameter ProductId exists (has any value).
+            </p>
+        </li>
+    </ul>
+	
+    <h3>
+        Version 02.06.02:</h3>
+    <h4>
+        Added Simple Content Injection:</h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Added attribute Content</b><br />
+                The passed value of this attribute will be injected if the set conditions are met.<br />
+                This will be expanded in the future (load HTML file content and the use of tokens).
+            </p>
+        </li>
+    </ul>
+    <h4>
+        Fixed bug in DNN5 Stylesheet removal:</h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+				The code change for DNN6 caused stylsheets not be removed in DNN 5 anymore, fixed now..<br />
+				Also added a warning for DNN6 users if the try something that does not work in DNN6.
+            </p>
+        </li>
+    </ul>
+
+    <h3>
+        Version 02.06.01:</h3>
+    <h4>
+        Changes to detectmobilebrowser detection:</h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Added attribute DetectMobileRegex1</b><br />
+                You can use this attribute to overwrite the first regex used by the detectmobilebrowser.com method
+            </p>
+        </li>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Added attribute DetectMobileRegex2</b><br />
+                You can use this attribute to overwrite the second regex used by the detectmobilebrowser.com method
+            </p>
+        </li>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Added Attribute: DetectMobileIncludeTablet</b><br />
+                On <a href="detectmobilebrowser.com">detectmobilebrowser.com/about</a> there's a method to include tablets as mobile devices (by changing the first regex).<br />
+                If you set DetectMobileIncludeTablet to True, the first regex is replaced and Tablets are treated as mobile (although I'm not 100% sure this is up to date).
+            </p>
+        </li>
+    </ul>
+    <h3>
+        Version 02.06.00:</h3>
+    <i>If you upgrade to this version and have used redirecting in your existing skins, make sure to test them!</i>
+    <h4>
+        Changes to Redirect:</h4>
+    <ul>
+        <li style="list-style-type: none;">
+            <p>
+                <b>Intro: Redirect Logic changes</b><br />
+                The way redirect were handled in a previous version was quite basic.<br />
+                I mostly used it to redirect Mobile devices fromthe Home page of a regular website to a mobile site<br />
+                I came a cross a more complex problem for a client were certain page should be redirected to the matching mobile pages.<br />
+                To support that I restructured Redirecting and when to stop redirecting.<br />
+            </p>
+            <p>
+                <b>New attribute: RedirectName</b><br />
+                You can give a redirect a name, to separate several redirects used on one site.<br />
+                2 redirect with a different name will not influence each other<br />
+                This way you can for instance have a Mobile redirect and a redirect for Internet Explorer 6 in the same skin.<br />
+                It also allows you to share the same redirect over different skins using the same RedirectName.
+            </p>
+            <p>
+                <b>New Attribute: RedirectBaseUrl</b><br />
+                You can use this as a base for redirecting.<br />
+                If set this will be combined with the RedirectUrl to the Url to redirect to.<br />
+                You can use the RedirectBaseUrl in the RedirectStop to stop redirecting if you link back from any page on the redirect site.
+            </p>
+            <p>
+                <b>New Attribute: RedirectStop</b></br /> With this attribute you set how you on what conditions the redirect is refused<br />
+                If the redirect is refused, it depends on the RedirectMode attribute what happens the next time the user visits the site.<br />
+                Possible Values:<br />
+                <ul>
+                    <li><b>Revisit</b> = Will NOT redirect after the first redirect</li>
+                    <li><b>RedirectUrl</b> = Will not redirect if the Referrer URL is the Redirect URL</li>
+                    <li><b>BaseRedirectUrl</b> = Will not redirect if the Referrer URL contains the Base Redirect URL</li>
+                    <li><b>QueryString</b> = Will not redirect if the following Query String Parameter is passed: NoRedirect=True</li>
+                </ul>
+                These values can be combined, comma separated.<br />
+                Default Value: "RedirectUrl,QueryString"<br />
+            </p>
+            <p>
+                <b><i>Relationships with RedirectMode</i></b><br />
+                With "RedirectStop" you set on what conditions redirect should NOT take place.<br />
+                With "RedirectMode" you set what should happen after a redirect did not take place.<br />
+            </p>
+            <p>
+                <ul>
+                    <li style="list-style-type: none;">
+                        <p>
+                            Examples:</p>
+                        <pre style="margin: 0;">IfMobile="True" RedirectTo="m.site.com" RedirectMode="Session"</pre>
+                        Will redirect the first visit of every session.<br />
+                        During this session redirecting will stop (because of the default value)when you:
+                        <ol>
+                            <li>Visit the page from the Redirected page.</li>
+                            <li>If you add the following querystring parameter to the URL.</li>
+                        </ol>
+            </p>
+            <pre style="margin: 0;">IfMobile="True" RedirectTo="m.site.com" RedirectMode="Once" RedirectStop="Revisit"</pre>
+            Will redirect the first visit to this page of every session.<br />
+            During this session redirecting will stop as soons as you revisit the page.<br />
+            The result is that redirect will only happen once during this session. </p>
+            <pre style="margin: 0;">IfMobile="True" RedirectTo="m.site.com" RedirectMode="Always" RedirectStop="Never"</pre>
+            Will always redirect the visitor to the mobile site. Visitng the regular site with a mobile device is impossible this way.<br />
+            </p> </li>
+    </ul>
+    <p>
+        <b>Changed Attribute: RedirectMode</b><br />
+        You can now use: Always, Once, Session & Never<br />
+        <b>Never</b>; was added as a way to not remove the the skin object, but switch the rediect off for testing purposes.<br />
+        <b>Session</b> is the new default value, this used to be "Once". This was changed because session is the most common scenario.<br />
+    </p>
+    </li> </ul>
+    <h4>
+        Changes Body Class</h4>
+    <ul>
+        <li style="list-style-type: none;"><b>Added attribute: FilterBodyClass</b><br />
+            By default the bodyclass ignores the filters you use.<br />
+            It if you set this attribute to True, the body class is only added if the filter conditions are met. </li>
+    </ul>
+    <h4>
+        Bug in AddHtmlAttributes in DNN 6</h4>
+    <ul>
+        The code to insert attributes to the HTML element changed in DNN 6 and did not work anymore. This has been corrected now.</li>
+    </ul>
+    <h3>
+        Version 02.05.00:</h3>
+    <ol>
+        <li>RedirectTo attribute<br />
+            Added Querystring Parameter Token: <strong>[QS:Parameter]</strong>
+            <ul>
+                <li>Example:<br />
+                    RedirectTo="http://m.site.com[QS:ID]"
+                    <br />
+                    Will look for a QueryString Parameter "ID" in the original URL and add it to the new URL<br />
+                    The Result will be this url:<br />
+                    http://m.site.com?ID=123</li>
+            </ul>
+        </li>
+    </ol>
+    <h3>
+        Version 02.04.01:</h3>
+    <ol>
+        <li>AddCssFile attribute<br />
+            Added 2 tokens:
+            <ul>
+                <li>[R] will be replaced by "/"</li>
+                <li>[D] will be replaced by "/DesktopModules/"</li>
+            </ul>
+        </li>
+    </ol>
+    <h3>
+        Version 02.04.00:</h3>
+    <ol>
+        <li>RemoveCssFile="/" now removes all Stylesheets in DNN 6</li>
+    </ol>
+    <h3>
+        Version 02.03.00:</h3>
+    <ol>
+        <li>Change an existing Meta tag</li>
+        <li>Use tokens to add or manipulate Meta tags</li>
+    </ol>
+    <h3>
+        Version 02.02.02:</h3>
+    <ol>
+        <li>AddHtmlAttribute, now replaces an attribute if it already exists</li>
+    </ol>
+    <h3>
+        Version 02.02.01:</h3>
+    <ol>
+        <li>Fixed bug in Reference handlings</li>
+    </ol>
+    <h3>
+        Version 02.02.00:</h3>
+    <ol>
+        <li>Improved Redirect Handling</li>
+        <li>Get Backlink to the PAge that casued the redirect</li>
+        <li>Add anything to the Head of the DotNetNuke page</li>
+        <li>Remove Existing DotNetNuke MetaTags</li>
+        <li>Links to Style sheets and Javascript files are now templatable</li>
+    </ol>
+    <p>
+        Mobile Detection uses: <a href="http://detectmobilebrowsers.com/">detectmobilebrowsers.com/</a>
+    </p>
+</div>
