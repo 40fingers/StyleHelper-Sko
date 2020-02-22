@@ -980,6 +980,22 @@ Namespace FortyFingers.Dnn.SkinObjects
                 _sIfCookie = value
             End Set
         End Property
+		
+		Private _sIfNoCookie As String
+        ''' <summary>
+        ''' Condition on Cookie Existance
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property IfNoCookie() As String
+            Get
+                Return _sIfNoCookie
+            End Get
+            Set(ByVal value As String)
+                _sIfNoCookie = value
+            End Set
+        End Property
 
 
 
@@ -2287,6 +2303,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             CheckQueryString(IfQS) AndAlso _
             CheckTextDir(IfTextDir) AndAlso _
             CheckMobile() AndAlso _
+            CheckNoCookies(IfNoCookie) AndAlso _
             CheckCookies(IfCookie)
 
         End Function
@@ -3054,21 +3071,38 @@ Namespace FortyFingers.Dnn.SkinObjects
             If sCookies = String.Empty Then
                 Return (True)
             Else
-                Dim bOut As Boolean = False
+                Dim bOut As Boolean = True
                 For Each s As String In SplitString(sCookies, "||")
                     Dim ParVal As New ParameterValue(s, ":")
-                    If CheckCookie(ParVal.Parameter, ParVal.Value1) Then
-                        Return True
-                    Else
+                    If Not CheckCookie(ParVal.Parameter, ParVal.Value1) Then
                         Return False
                     End If
                 Next
                 Return (bOut)
             End If
 
-            Return (False)
-
         End Function
+		
+		
+		
+		Protected Function CheckNoCookies (ByVal sNoCookies As String) As Boolean
+		'Check if the passed cookies don't exist
+		
+			If sNoCookies = String.Empty Then
+                Return (True)
+            Else
+                Dim bOut As Boolean = True
+                For Each s As String In SplitString(sNoCookies, "||")
+					
+                    If CheckCookie(s, "") Then
+                        Return False
+                    End If
+					
+                Next
+                Return (bOut)
+            End If
+			
+		End Function
 
 #End Region
 
