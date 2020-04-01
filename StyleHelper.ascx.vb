@@ -6,7 +6,6 @@ Imports System.Collections.Generic
 Imports DotNetNuke.Application
 
 
-
 Namespace FortyFingers.Dnn.SkinObjects
 
     ''' ----------------------------------------------------------------------------- 
@@ -980,8 +979,8 @@ Namespace FortyFingers.Dnn.SkinObjects
                 _sIfCookie = value
             End Set
         End Property
-		
-		Private _sIfNoCookie As String
+
+        Private _sIfNoCookie As String
         ''' <summary>
         ''' Condition on Cookie Existance
         ''' </summary>
@@ -1532,15 +1531,15 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Private Function GetResponseCookie(key as string) as string
-		
-			'encode key for retrieval
+        Private Function GetResponseCookie(key As String) As String
+
+            'encode key for retrieval
             key = HttpContext.Current.Server.UrlEncode(key)
-			dim ck as HttpCookie = HttpContext.Current.Response.Cookies.Get(key)
-            return (ck.Value)
-			
-		End Function
-		
+            Dim ck As HttpCookie = HttpContext.Current.Response.Cookies.Get(key)
+            Return (ck.Value)
+
+        End Function
+
 
 
 
@@ -2788,13 +2787,13 @@ Namespace FortyFingers.Dnn.SkinObjects
         Protected Function GetBrowserVersion() As Version
 
             'Get a version object for the users browser
-			Dim sVersion As String
-			
-			If Not Request.Browser.Version Is Nothing Then
-				sVersion = Request.Browser.Version.Replace(",", ".")
-			Else
-				sVersion = "0.0.0"
-			End If
+            Dim sVersion As String
+
+            If Not Request.Browser.Version Is Nothing Then
+                sVersion = Request.Browser.Version.Replace(",", ".")
+            Else
+                sVersion = "0.0.0"
+            End If
 
             Return New Version(sVersion)
 
@@ -3082,27 +3081,27 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
         End Function
-		
-		
-		
-		Protected Function CheckNoCookies (ByVal sNoCookies As String) As Boolean
-		'Check if the passed cookies don't exist
-		
-			If sNoCookies = String.Empty Then
+
+
+
+        Protected Function CheckNoCookies(ByVal sNoCookies As String) As Boolean
+            'Check if the passed cookies don't exist
+
+            If sNoCookies = String.Empty Then
                 Return (True)
             Else
                 Dim bOut As Boolean = True
                 For Each s As String In SplitString(sNoCookies, "||")
-					
+
                     If CheckCookie(s, "") Then
                         Return False
                     End If
-					
+
                 Next
                 Return (bOut)
             End If
-			
-		End Function
+
+        End Function
 
 #End Region
 
@@ -3147,23 +3146,27 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Protected Function GetBrowserName() As String
 
-            Dim sOut As String = String.Empty
+            Dim sOut As String = "Undefined"
+
 
             If Not Request.Browser.Browser Is Nothing Then
 
 
-                sOut = Request.Browser.Browser.ToLower
+                    sOut = Request.Browser.Browser.ToLower
 
-                'Correct change of returned browser for IE 11
-                If sOut = "internetexplorer" Then sOut = "ie"
-                If sOut = "internet explorer" Then sOut = "ie"
+                    'Correct change of returned browser for IE 11
+                    If sOut = "internetexplorer" Then sOut = "ie"
+                    If sOut = "internet explorer" Then sOut = "ie"
 
                 'Workaround for Edge (not in the browser capabilites file)
-                If Regex.IsMatch(Request.UserAgent, "Edge\/\d+") Then
+                If Not Request.UserAgent Is Nothing AndAlso Regex.IsMatch(Request.UserAgent, "Edge\/\d+") Then
                     sOut = "edge"
                 End If
 
             End If
+
+
+
 
             Return sOut
 
@@ -3855,7 +3858,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             End If
 
-                Return ""
+            Return ""
 
 
         End Function
@@ -4405,16 +4408,16 @@ Namespace FortyFingers.Dnn.SkinObjects
 
                 Dim u As String = Request.ServerVariables("HTTP_USER_AGENT")
                 Dim b As New Regex(IfMobileRX1, RegexOptions.IgnoreCase)
-				
-				'In case the second regex was set to "" also match
-				Dim bM2 as Boolean = False
+
+                'In case the second regex was set to "" also match
+                Dim bM2 As Boolean = False
 
                 If IfMobileRX2 <> "" Then
                     Dim v As New Regex(IfMobileRX2, RegexOptions.IgnoreCase)
-                    If v.IsMatch(Left(u, 4)) Then 
-						bM2 = True
-					End If
-				End If
+                    If v.IsMatch(Left(u, 4)) Then
+                        bM2 = True
+                    End If
+                End If
 
                 If b.IsMatch(u) Or bM2 Then
                     Return (bCheckFor)
