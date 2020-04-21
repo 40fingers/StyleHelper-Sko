@@ -2786,16 +2786,27 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Protected Function GetBrowserVersion() As Version
 
-            'Get a version object for the users browser
-            Dim sVersion As String
+			'Get a version object for the users browser
+			
+			' As there are some robots that pass very weird version numbers, the safest way around this is a try catch.
+			Dim strDefaultVersion as String = "0.0.0"
+			Try
+			
+				
+				Dim sVersion As String
 
-            If Not Request.Browser.Version Is Nothing Then
-                sVersion = Request.Browser.Version.Replace(",", ".")
-            Else
-                sVersion = "0.0.0"
-            End If
+				If Not Request.Browser.Version Is Nothing Then
+					sVersion = Request.Browser.Version.Replace(",", ".")
+				Else
+					sVersion = strDefaultVersion
+				End If
 
-            Return New Version(sVersion)
+					Return New Version(sVersion)
+				
+			Catch
+			
+				Return New Version(strDefaultVersion)
+			
 
 
         End Function
