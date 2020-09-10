@@ -925,6 +925,21 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return _sIfCulture
             End Get
         End Property
+		
+		
+		 Private _strIfToken As String = String.Empty
+        ''' <summary>
+        ''' If this is empty or all Token passed return more than an empty String this returns True 
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property IfToken() As String
+            Get
+                Return _strIfToken
+            End Get
+            Set(ByVal value As String)
+                _strIfToken = value
+            End Set
+        End Property
 
 
 
@@ -2303,7 +2318,8 @@ Namespace FortyFingers.Dnn.SkinObjects
             CheckTextDir(IfTextDir) AndAlso _
             CheckMobile() AndAlso _
             CheckNoCookies(IfNoCookie) AndAlso _
-            CheckCookies(IfCookie)
+            CheckCookies(IfCookie) AndAlso _
+			CheckTokens(IfToken)
 
         End Function
 
@@ -3110,6 +3126,30 @@ Namespace FortyFingers.Dnn.SkinObjects
 
                 Next
                 Return (bOut)
+            End If
+
+        End Function
+		
+		''' <summary>
+        ''' Test to see if the parsed token striong returns anything.
+        ''' If it does return True
+        ''' If it doesn't return False
+        ''' </summary>
+        ''' <param name="sTokens"></param>
+        ''' <returns></returns>
+        Protected Function CheckTokens(sTokens As String) As Boolean
+
+            If sTokens = String.Empty Then
+                Return True
+            Else
+
+
+                If ProcessTokens(sTokens).Trim = String.Empty Then
+                    Return False
+                Else
+                    Return True
+                End If
+
             End If
 
         End Function
