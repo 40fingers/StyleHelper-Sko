@@ -1,8 +1,13 @@
 Option Strict On
 
+Imports System.Text
+Imports System.Globalization
+Imports System.Web.UI.WebControls
+Imports System.Collections.Generic
+
 Imports DotNetNuke
 Imports DotNetNuke.Security.Permissions
-Imports System.Collections.Generic
+
 Imports DotNetNuke.Application
 
 
@@ -925,9 +930,9 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return _sIfCulture
             End Get
         End Property
-		
-		
-		 Private _strIfToken As String = String.Empty
+
+
+        Private _strIfToken As String = String.Empty
         ''' <summary>
         ''' If this is empty or all Token passed return more than an empty String this returns True 
         ''' </summary>
@@ -938,6 +943,23 @@ Namespace FortyFingers.Dnn.SkinObjects
             End Get
             Set(ByVal value As String)
                 _strIfToken = value
+            End Set
+        End Property
+
+
+
+        Private _bIfExternal As Boolean = True
+        ''' <summary>
+        ''' You can pass an external parameter from the skin by using IfExternal="<%# True %>" / IfExternal="<%# SomeFunction() %>"
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property IfExternal() As String
+            Get
+                Return _bIfExternal.ToString
+            End Get
+            Set(ByVal value As String)
+                _bIfExternal = CBool(value)
+
             End Set
         End Property
 
@@ -994,6 +1016,8 @@ Namespace FortyFingers.Dnn.SkinObjects
                 _sIfCookie = value
             End Set
         End Property
+
+
 
         Private _sIfNoCookie As String
         ''' <summary>
@@ -2319,7 +2343,9 @@ Namespace FortyFingers.Dnn.SkinObjects
             CheckMobile() AndAlso _
             CheckNoCookies(IfNoCookie) AndAlso _
             CheckCookies(IfCookie) AndAlso _
-			CheckTokens(IfToken)
+            CheckTokens(IfToken) AndAlso _
+            _bIfExternal = True
+
 
         End Function
 
@@ -2802,27 +2828,29 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Protected Function GetBrowserVersion() As Version
 
-			'Get a version object for the users browser
-			
-			' As there are some robots that pass very weird version numbers, the safest way around this is a try catch.
-			Dim strDefaultVersion as String = "0.0.0"
-			Try
-			
-				
-				Dim sVersion As String
+            'Get a version object for the users browser
 
-				If Not Request.Browser.Version Is Nothing Then
-					sVersion = Request.Browser.Version.Replace(",", ".")
-				Else
-					sVersion = strDefaultVersion
-				End If
+            ' As there are some robots that pass very weird version numbers, the safest way around this is a try catch.
+            Dim strDefaultVersion As String = "0.0.0"
+            Try
 
-					Return New Version(sVersion)
-				
-			Catch
-			
-				Return New Version(strDefaultVersion)
-			
+
+                Dim sVersion As String
+
+                If Not Request.Browser.Version Is Nothing Then
+                    sVersion = Request.Browser.Version.Replace(",", ".")
+                Else
+                    sVersion = strDefaultVersion
+                End If
+
+                Return New Version(sVersion)
+
+            Catch
+
+                Return New Version(strDefaultVersion)
+
+            End Try
+
 
 
         End Function
@@ -3129,8 +3157,9 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
         End Function
-		
-		''' <summary>
+
+
+        ''' <summary>
         ''' Test to see if the parsed token striong returns anything.
         ''' If it does return True
         ''' If it doesn't return False
@@ -3153,6 +3182,7 @@ Namespace FortyFingers.Dnn.SkinObjects
             End If
 
         End Function
+
 
 #End Region
 
@@ -3203,11 +3233,11 @@ Namespace FortyFingers.Dnn.SkinObjects
             If Not Request.Browser.Browser Is Nothing Then
 
 
-                    sOut = Request.Browser.Browser.ToLower
+                sOut = Request.Browser.Browser.ToLower
 
-                    'Correct change of returned browser for IE 11
-                    If sOut = "internetexplorer" Then sOut = "ie"
-                    If sOut = "internet explorer" Then sOut = "ie"
+                'Correct change of returned browser for IE 11
+                If sOut = "internetexplorer" Then sOut = "ie"
+                If sOut = "internet explorer" Then sOut = "ie"
 
                 'Workaround for Edge (not in the browser capabilites file)
                 If Not Request.UserAgent Is Nothing AndAlso Regex.IsMatch(Request.UserAgent, "Edge\/\d+") Then
