@@ -1052,6 +1052,13 @@ Namespace FortyFingers.Dnn.SkinObjects
                 _strTest = value
             End Set
         End Property
+		
+		
+		Public ReadOnly Property PortalAlias() As String
+            Get
+                Return String.Format("{0}://{1}", GetAliasProtocol() , PortalSettings.PortalAlias.HTTPAlias)
+            End Get
+        End Property
 
 
         Public ReadOnly Property Portal() As PortalInfo
