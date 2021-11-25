@@ -715,6 +715,24 @@ Namespace FortyFingers.Dnn.SkinObjects
             End Set
         End Property
 
+
+
+        Private _bFilterAddLanguageLinksToHead As Boolean = False
+        ''' <summary>
+        ''' Set if AddLanguageLinksToHead should check filters
+        ''' </summary>
+        ''' <value>False</value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Property FilterAddLanguageLinksToHead() As Boolean
+            Set(ByVal Value As Boolean)
+                _bFilterAddLanguageLinksToHead = Value
+            End Set
+            Get
+                Return _bFilterAddLanguageLinksToHead
+            End Get
+        End Property
+
 #End Region
 
 
@@ -1404,18 +1422,23 @@ Namespace FortyFingers.Dnn.SkinObjects
 
             If AddLanguageLinksToHead Then
 
-                Dim strLinks As String = GetLanguageLinks(PortalSettings.ActiveTab.TabID, LanguageLinksTemplate)
+
+                If FilterAddLanguageLinksToHead = False OrElse bConditions Then
+
+                    Dim strLinks As String = GetLanguageLinks(PortalSettings.ActiveTab.TabID, LanguageLinksTemplate)
 
 
-                If strLinks <> String.Empty Then
-                    Add2Head(strLinks)
+                    If strLinks <> String.Empty Then
+                        Add2Head(strLinks)
+                    End If
+
                 End If
 
 
             End If
 
 
-            If Not RemoveMeta = String.Empty Then
+                If Not RemoveMeta = String.Empty Then
                 If FilterRemove = False Or bConditions Then
                     ProcessRemoveMeta()
                 End If
