@@ -7,6 +7,8 @@ Imports System.Collections.Generic
 
 Imports DotNetNuke
 Imports DotNetNuke.Security.Permissions
+Imports Dotnetnuke.Entities.Modules
+
 
 Imports DotNetNuke.Application
 
@@ -30,6 +32,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 #Region "Private Members"
 
         Private Const _sNOT As String = "!"
+        Private Const _strModuleEdit As String = "EditModule"
 
         'Check if the conditions are met to proceed
         Dim bConditions As Boolean
@@ -860,7 +863,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private _sIfUserMode As String
         ''' <summary>
-        ''' If the user mode is "None,View,Edit,Layout'
+        ''' If the user mode is "None,View,Edit,Layout, EditModule'
         ''' </summary>
         ''' <value></value>
         ''' <returns></returns>
@@ -1542,6 +1545,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Function GetCpState() As String
 
+
             If DotNetNuke.Security.Permissions.TabPermissionController.CanAddContentToPage Or DotNetNuke.Security.Permissions.TabPermissionController.CanManagePage Then
                 Select Case PortalSettings.UserMode
 
@@ -1555,7 +1559,15 @@ Namespace FortyFingers.Dnn.SkinObjects
                     Case DotNetNuke.Entities.Portals.PortalSettings.Mode.Layout
                         Return DotNetNuke.Entities.Portals.PortalSettings.Mode.Layout.ToString
 
+
                 End Select
+
+            Else
+
+                If IsModuleEditor() Then
+                    Return _strModuleEdit
+                End If
+
             End If
 
             Return (strUserModeNone)
@@ -3310,6 +3322,33 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
         End Function
+
+
+        Private Function IsModuleEditor() As Boolean
+
+            Dim _IsModuleAdmin As Boolean = Null.NullBoolean
+
+            '' Loop over all modules on this page
+            For Each objModule As ModuleInfo In TabController.CurrentPage.Modules
+
+                If Not objModule.IsDeleted Then
+                    Dim blnHasModuleEditPermissions As Boolean = ModulePermissionController.HasModuleAccess(SecurityAccessLevel.Edit, Null.NullString, objModule)
+
+                    If blnHasModuleEditPermissions Then
+                        _IsModuleAdmin = True
+                        Exit For
+                    End If
+                End If
+
+            Next
+
+            Return PortalController.Instance.GetCurrentPortalSettings().ControlPanelSecurity = PortalSettings.ControlPanelPermission.ModuleEditor AndAlso _IsModuleAdmin
+
+
+        End Function
+
+
+
 
 
 
