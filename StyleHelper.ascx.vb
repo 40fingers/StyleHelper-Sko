@@ -2981,6 +2981,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                     End If
                 Else
 
+                    'If is a member of a roles
                     If (MatchString(sAllroles, sRoles)) Then
                         Return True
                     End If
@@ -3080,23 +3081,27 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Function CheckQueryString(ByVal sQS As String) As Boolean
             'Check if the query string parameter exists and if the value is correct
 
-            'If no QS passed, skin check
+            'If no QS passed, skip check
             If sQS = String.Empty Then
                 Return (True)
             Else
+
+
                 'Get parameter and value to test for
                 Dim ifQS As New ParameterValue(sQS, ":")
 
                 Dim QSValue As String = GetQsValue(ifQS.Parameter)
 
+
                 If ifQS.Value1 = "" Then
-                    'Thsi means only a QS parameter was passed a condition, retrun true if it exists in the current URL
+                    'This means only a QS parameter was passed a condition, return true if it exists in the current URL
                     If QSValue > "" Then
                         Return True
                     End If
                 Else
-                    'Check the passed QS paramter value against the current url's QS value
-                    If QSValue.ToLower = ifQS.Value1.ToLower Then
+                    'Check the passed QS paramter value against the current URL's QS value
+
+                    If (MatchString(QSValue.ToLower, ifQS.Value1.ToLower)) Then
                         Return (True)
                     End If
 
@@ -3449,11 +3454,15 @@ Namespace FortyFingers.Dnn.SkinObjects
         Private Function MatchString(ByVal sTest As String, ByVal sParameters As String) As Boolean
             'Test if one of the parameters (comma separated) matches the Test string
 
+            'Noting passed
             If sParameters = String.Empty Or sTest = String.Empty Then
                 Return False
             End If
 
             Dim bReturn As Boolean = False
+
+
+
 
             'Split the comma separated list and parse them one by one.
             For Each s As String In Regex.Split(sParameters, ",", RegexOptions.IgnoreCase)
