@@ -3086,6 +3086,13 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
 
+                'Return value
+                Dim bResult As Boolean = False
+
+                ' Check wether to invert the result
+                Dim bInvert As Boolean = ParseInvert(sQS)
+
+
                 'Get parameter and value to test for
                 Dim ifQS As New ParameterValue(sQS, ":")
 
@@ -3096,22 +3103,31 @@ Namespace FortyFingers.Dnn.SkinObjects
                 If ifQS.Value1 = "" Then
                     'This means no Value was passed as a condition, return true if it exists in the current URL
                     If Not (QSValue Is Nothing) Then
-                        Return True
+                        bResult = True
                     End If
                 Else
-                    'Check the passed QS parameter value against the current URL's QS value
+                    'Test if the value is not nothing
+                    If Not (QSValue Is Nothing) Then
 
-                    If (MatchString(QSValue.ToLower, ifQS.Value1.ToLower)) Then
+                        'Check the passed QS parameter value against the current URL's QS value
 
-                        Return (True)
+                        If (MatchString(QSValue.ToLower, ifQS.Value1.ToLower)) Then
+
+                            bResult = True
+
+                        End If
 
                     End If
-
-
 
                 End If
 
-                Return (False)
+
+                If bInvert Then
+                    Return Not bResult
+                Else
+                    Return bResult
+                End If
+
 
             End If
 
