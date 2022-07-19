@@ -3453,6 +3453,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Function MatchString(ByVal sTest As String, ByVal sParameters As String) As Boolean
             'Test if one of the parameters (comma separated) matches the Test string
+			' This functions as an OR for comma separated values, as the function is exited as soon as a value is found.
 
             'Noting passed
             If sParameters = String.Empty Or sTest = String.Empty Then
