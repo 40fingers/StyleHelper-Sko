@@ -3086,24 +3086,28 @@ Namespace FortyFingers.Dnn.SkinObjects
                 Return (True)
             Else
 
-
                 'Get parameter and value to test for
                 Dim ifQS As New ParameterValue(sQS, ":")
 
                 Dim QSValue As String = GetQsValue(ifQS.Parameter)
 
 
+                ' No value passed to test
                 If ifQS.Value1 = "" Then
-                    'This means only a QS parameter was passed a condition, return true if it exists in the current URL
-                    If QSValue > "" Then
+                    'This means no Value was passed as a condition, return true if it exists in the current URL
+                    If Not (QSValue Is Nothing) Then
                         Return True
                     End If
                 Else
-                    'Check the passed QS paramter value against the current URL's QS value
+                    'Check the passed QS parameter value against the current URL's QS value
 
                     If (MatchString(QSValue.ToLower, ifQS.Value1.ToLower)) Then
+
                         Return (True)
+
                     End If
+
+
 
                 End If
 
@@ -3426,11 +3430,29 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Function GetQsValue(ByVal Parameter As String) As String
 
-            If Request.QueryString(Parameter) Is Nothing Then
-                Return (String.Empty)
+            Dim bExists As Boolean = False
+
+
+            ' Test if the QS paramter exists, in case it might be empty..
+            bExists = Request.QueryString.AllKeys.Contains(Parameter)
+
+            'Get the QSP value
+            Dim strValue = Request.QueryString(Parameter)
+
+            ' Value found, return it.
+            If Not strValue Is Nothing Then
+                Return strValue
+
             Else
-                Return Request.QueryString(Parameter)
+                'return en empty string in case there was no value, but the SQP existed (?color)
+                If bExists Then
+                    Return String.Empty
+                End If
+
             End If
+
+            ' Not found and no value
+            Return Nothing
 
         End Function
 
