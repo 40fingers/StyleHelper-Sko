@@ -10,4 +10,4 @@ These filters can be positive (include) or negative (exclude).
 
 And it can do much more, check out the [documentation & release download](https://www.40fingers.net/Products/DNN-Stylehelper)
 
-Demo Theme: https://github.com/40fingers/StyleHelper-Sko-DEMO-Theme
+Demo Themes: https://github.com/40fingers/StyleHelper-Sko-DEMO-Theme
