@@ -1890,6 +1890,15 @@ Namespace FortyFingers.Dnn.SkinObjects
 
         Private Sub GoForceCssOrder()
 
+            'Get the SkinName.css file name
+            Dim SkinVariantCss As String = GetFileName(PortalSettings.ActiveTab.SkinSrc, False) & ".css"
+
+
+
+
+            Dim CssRegex = "/Skin.css|/Portal.css|/" & SkinVariantCss
+
+
             'Get the CRM control
             Dim oIncludes As Control = Me.Page.FindControl("ClientResourceIncludes")
             If Not oIncludes Is Nothing Then
@@ -1903,16 +1912,12 @@ Namespace FortyFingers.Dnn.SkinObjects
                     Select Case oCssControl.GetType.ToString
                         Case "DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude"
                             Dim oCssItem As DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude = CType(oCssControl, DotNetNuke.Web.Client.ClientResourceManagement.DnnCssInclude)
-                            'Check the path
-                            If Regex.IsMatch(oCssItem.FilePath, "/Skin.css|/Portal.css", RegexOptions.IgnoreCase) Then
-                                'Add to the list of controls to remove
-                                Select Case oCssItem.Priority
-                                    Case 15
-                                        oCssItem.Priority = 1000
-                                    Case 35
-                                        oCssItem.Priority = 1001
 
-                                End Select
+                            'Check the path
+                            If Regex.IsMatch(oCssItem.FilePath, CssRegex, RegexOptions.IgnoreCase) Then
+                                'Add to the list of controls to remove
+
+                                oCssItem.Priority += 1000
 
                             End If
 
@@ -3373,10 +3378,24 @@ Namespace FortyFingers.Dnn.SkinObjects
         End Function
 
 
+        ''' <summary>
+        '''  Returns the filename from a passed Path
+        ''' </summary>
+        ''' <param name="url"></param>
+        ''' <param name="Extension"></param>
+        ''' <returns></returns>
+        Private Function GetFileName(url As String, Extension As Boolean) As String
+
+            If Extension Then
+                Return System.IO.Path.GetFileName(url)
+            Else
+                Return System.IO.Path.GetFileNameWithoutExtension(url)
+
+            End If
 
 
 
-
+        End Function
 
 
 
