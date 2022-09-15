@@ -1896,7 +1896,8 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-            Dim CssRegex = "/Skin.css|/Portal.css|/" & SkinVariantCss
+            Dim CssRegex = "/Skin.css|/Portal.css|/popUpSkin.css|/" & SkinVariantCss
+			
 
 
             'Get the CRM control
