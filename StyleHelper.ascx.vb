@@ -2965,36 +2965,35 @@ Namespace FortyFingers.Dnn.SkinObjects
                 'Regular Check, user in roles
                 Dim sAllroles As String = GetUserroles()
 
-                If sRoles.ToLower = "none" Then
-                    If sAllroles = String.Empty Then
-                        Return True
-                    Else
-                        Return False
-                    End If
-                End If
-
-
                 'As there is no superuser role, so add it for superusers
                 If UserController.Instance.GetCurrentUserInfo().IsSuperUser Then
                     sAllroles = CharSepStrAdd(sAllroles, "SuperUsers", "|")
                 End If
 
 
-                'If the user is not a member of any roles (not logged in)
-                If sAllroles = "" Then
-                    If (MatchString("*", sRoles)) Then
-                        Return True
-                    End If
-                Else
 
-                    'If is a member of a roles
+                ' No Roles found for the current User
+                If sAllroles = String.Empty Then
+                     'Check the "None" keyword for no Roles
+                    If sRoles.ToLower = "none" Then
+                        Return True
+                    Else
+                        ' This looks redundant but it's not.
+                        ' This is needed for the this test "!Administrators". 
+                        ' A user without Roles should be matched in that case too
+                        ' "-#-#-#-#-"used to work around MatchString returning False when the passed value is Empty
+                        If (MatchString("-#-#-#-#-", sRoles)) Then
+                            Return True
+                        End If
+                    End If
+                ' Roles Found
+                Else
+                    'If User is a member of a roles Passed
                     If (MatchString(sAllroles, sRoles)) Then
                         Return True
                     End If
-
-                    'If SuperUsers was part of the roles list
-
                 End If
+
 
                 Return False
 
