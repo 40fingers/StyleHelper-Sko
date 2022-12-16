@@ -12,7 +12,7 @@ And it can do much more, check out the [documentation & release download](https:
 
 Demo Themes: https://github.com/40fingers/StyleHelper-Sko-DEMO-Theme
 
-### Note: I sometimes get questions: Why is all the code all in one file?
+### Note: I sometimes get questions: Why is the code all in one file?
 
 When I first created the Style Helper, some clients did not want to install any third party extensions.
 So a dynamically compiled Skin Object was a good way around that limitation as you can also load the SKO from the Skin folder and include it in the Skin package.
