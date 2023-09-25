@@ -3159,7 +3159,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Protected Function CheckCultures(ByVal sCultures As String) As Boolean
+        Public Function CheckCultures(ByVal sCultures As String) As Boolean
 
 
             If sCultures > String.Empty Then
