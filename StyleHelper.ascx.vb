@@ -4174,7 +4174,7 @@ Namespace FortyFingers.Dnn.SkinObjects
                 'Split out all the roles
                 For Each sRole As String In Regex.Split(sRoles, ";")
                     'Check if the user is a member of the Role
-                    If UserController.GetCurrentUserInfo().IsInRole(sRole) Then
+                    If UserController.Instance.GetCurrentUserInfo().IsInRole(sRole) Then
                         sOut &= " " & CreateValidCssClass("UPR_" & sRole)
                     End If
                 Next
