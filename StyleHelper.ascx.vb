@@ -439,8 +439,8 @@ Namespace FortyFingers.Dnn.SkinObjects
             End Set
         End Property
 
-
-
+        '' Set if something asks for a body class to be injected
+        private _HasBodyClass as Boolean = False
 
         Dim _bAddBodyClass As Boolean = False
         ''' <summary>
@@ -452,6 +452,7 @@ Namespace FortyFingers.Dnn.SkinObjects
         Public Property AddBodyClass() As Boolean
             Set(ByVal Value As Boolean)
                 _bAddBodyClass = Value
+                _HasBodyClass = True
             End Set
             Get
                 Return _bAddBodyClass
@@ -566,7 +567,8 @@ Namespace FortyFingers.Dnn.SkinObjects
             End Get
             Set(ByVal value As String)
                 'If the template is set, set adding the class to true.
-                AddBodyClass = True
+                _bAddBodyClass = True
+                _HasBodyClass = True
                 _sBodyClass = value
             End Set
         End Property
@@ -584,8 +586,9 @@ Namespace FortyFingers.Dnn.SkinObjects
             End Get
             Set(ByVal value As String)
                 'If the template is set, set adding the class to true.
-                AddBodyClass = True
                 _sAddToBodyClass = value
+                _HasBodyClass = True
+                
             End Set
         End Property
 
@@ -1506,17 +1509,32 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
             'Non conditional Options
-            If FilterBodyClass = False Or bConditions Then
+            If _HasBodyClass AndAlso (FilterBodyClass = False Or bConditions) Then
 
-                If AddBodyClass Then
+                Dim sBC As String = String.Empty
 
-                    Dim sBC As String = BodyClass
+                '' Is there a custom body class
+                If AddBodyClass = True Then
 
-                    If bConditions Then sBC &= " " & AddToBodyClass
-
-                    ProcessPageClassTemplate(sBC)
+                    sBC = BodyClass
 
                 End If
+
+
+                If Not AddToBodyClass = String.Empty Then
+
+                    sBC += " " + AddToBodyClass
+
+                End If
+
+
+                if Not sBC = String.Empty Then
+
+                         WriteBodyClass(ProcessPageClassTemplate(sBC))
+
+                End If
+
+                   
 
             End If
 
@@ -4114,7 +4132,7 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 #Region "PageClasses"
 
-        Private Sub ProcessPageClassTemplate(ByVal Template As String)
+        Private Function ProcessPageClassTemplate(ByVal Template As String) As String
 
             'Process the template for the body CSS class
             Dim sOut As String = String.Empty
@@ -4175,10 +4193,10 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-            WritePageClass(Template.Trim)
+            Return Template.Trim
 
 
-        End Sub
+        End Function
 
 
         Private Function GetUserPageRolesClass() As String
@@ -4307,11 +4325,17 @@ Namespace FortyFingers.Dnn.SkinObjects
 
 
 
-        Private Sub WritePageClass(ByVal sIn As String)
+        Private Sub WriteBodyClass(ByVal sIn As String)
 
-            Dim oBody As New HtmlGenericControl
-            oBody = CType(Me.Page.FindControl("Body"), HtmlGenericControl)
-            oBody.Attributes.Add("class", sIn.Trim)
+            Dim oBody As HtmlGenericControl = CType(Me.Page.FindControl("Body"), HtmlGenericControl)
+
+            Dim sExisting As String = oBody.Attributes("class")
+
+            If String.IsNullOrEmpty(sExisting) Then
+                oBody.Attributes.Add("class", sIn.Trim)
+            Else
+                oBody.Attributes("class") = sExisting & " " & sIn.Trim
+            End If
 
         End Sub
 
